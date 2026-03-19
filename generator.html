@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generator — PromptCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#080809;--bg2:#0f0f11;--bg3:#161618;--bg4:#1c1c1f;
+  --border:rgba(255,255,255,0.08);--border-h:rgba(255,255,255,0.15);
+  --text:#f0efe8;--muted:rgba(240,239,232,0.5);--hint:rgba(240,239,232,0.28);
+  --accent:#d4ff47;--accent2:#ff6b35;--accent3:#47c3ff;
+  --sidebar:230px;
+  --font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;display:flex;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:0.5;}
+
+/* Sidebar */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;}
+.sidebar-logo{padding:1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);text-decoration:none;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.sidebar-nav{flex:1;padding:1rem 0.75rem;display:flex;flex-direction:column;gap:2px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;font-weight:400;color:var(--muted);text-decoration:none;cursor:pointer;border:none;background:none;width:100%;transition:background .15s,color .15s;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}
+.nav-item.active{background:rgba(212,255,71,0.08);color:var(--accent);font-weight:500;}
+.nav-item .icon{width:16px;text-align:center;font-size:14px;flex-shrink:0;}
+.nav-sec{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--hint);padding:12px 12px 4px;}
+.sidebar-footer{padding:0.75rem;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;}
+.user-card:hover{background:rgba(255,255,255,0.04);}
+.avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:rgba(212,255,71,0.15);border:1px solid rgba(212,255,71,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);font-family:var(--font-head);}
+.user-info .name{font-size:13px;font-weight:500;color:var(--text);}
+.user-info .plan{font-size:11px;color:var(--muted);}
+.chevron{margin-left:auto;color:var(--hint);font-size:12px;}
+
+/* Main */
+.main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:58px;padding:0 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;}
+.topbar-left{display:flex;align-items:center;gap:12px;}
+.topbar-title{font-family:var(--font-head);font-size:16px;font-weight:700;}
+.credits-pill{font-size:12px;color:var(--muted);background:var(--bg3);border:0.5px solid var(--border-h);padding:4px 10px;border-radius:20px;}
+.credits-pill span{color:var(--accent);font-weight:600;}
+
+/* Generator layout */
+.gen-layout{display:grid;grid-template-columns:1fr 1fr;gap:0;flex:1;min-height:calc(100vh - 58px);}
+
+/* Left panel - input */
+.input-panel{padding:2rem;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:1.5rem;}
+
+.panel-header{}
+.panel-title{font-family:var(--font-head);font-size:1.1rem;font-weight:700;letter-spacing:-0.01em;margin-bottom:4px;}
+.panel-sub{font-size:13px;color:var(--muted);font-weight:300;line-height:1.5;}
+
+/* Goal input */
+.goal-box{background:var(--bg2);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:border-color .2s;}
+.goal-box:focus-within{border-color:rgba(212,255,71,0.35);}
+.goal-label{padding:12px 16px 0;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+textarea#goalInput{width:100%;min-height:140px;padding:10px 16px 12px;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:15px;font-weight:300;line-height:1.65;resize:none;}
+textarea::placeholder{color:var(--hint);}
+.goal-footer{padding:10px 14px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.char-count{font-size:11px;color:var(--hint);}
+.example-btn{font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;transition:color .2s;padding:0;}
+.example-btn:hover{color:var(--accent);}
+
+/* Options row */
+.options-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.option-group label{display:block;font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.option-group select{width:100%;padding:9px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='rgba(240,239,232,0.3)' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;}
+select:focus{border-color:rgba(212,255,71,0.3);}
+select option{background:var(--bg3);}
+
+/* Techniques */
+.techniques-box{}
+.tech-label{font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.tech-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.tech-pill{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .15s;user-select:none;}
+.tech-pill:hover{border-color:var(--border-h);color:var(--text);}
+.tech-pill.on{background:rgba(212,255,71,0.1);border-color:rgba(212,255,71,0.35);color:var(--accent);}
+
+/* Generate button */
+.gen-btn{width:100%;padding:15px;background:var(--accent);border:none;border-radius:12px;color:#080809;font-family:var(--font-body);font-size:15px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;display:flex;align-items:center;justify-content:center;gap:10px;letter-spacing:-0.01em;position:relative;overflow:hidden;}
+.gen-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%);pointer-events:none;}
+.gen-btn:hover{opacity:.9;transform:translateY(-1px);}
+.gen-btn:active{transform:scale(.99);}
+.gen-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.gen-btn .btn-icon{font-size:18px;transition:transform .3s;}
+.gen-btn:not(:disabled):hover .btn-icon{transform:rotate(15deg);}
+
+/* Right panel - output */
+.output-panel{padding:2rem;display:flex;flex-direction:column;gap:1.5rem;background:var(--bg2);}
+
+/* Empty state */
+.empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:3rem 2rem;opacity:1;transition:opacity .3s;}
+.empty-state.hidden{display:none;}
+.empty-orbit{width:80px;height:80px;border-radius:50%;border:1px dashed rgba(212,255,71,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;position:relative;animation:spin 8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-orbit::before{content:'⚡';font-size:28px;animation:spin 8s linear infinite reverse;}
+.empty-title{font-family:var(--font-head);font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;}
+.empty-sub{font-size:13px;color:var(--muted);font-weight:300;line-height:1.6;max-width:280px;}
+
+/* Loading state */
+.loading-state{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;}
+.loading-state.show{display:flex;}
+.loading-dots{display:flex;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:bounce .8s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:.15s;}
+.dot:nth-child(3){animation-delay:.3s;}
+@keyframes bounce{0%,100%{opacity:.3;transform:scale(.7)}50%{opacity:1;transform:scale(1)}}
+.loading-text{font-size:14px;color:var(--muted);font-weight:300;}
+.loading-steps{display:flex;flex-direction:column;gap:8px;width:260px;}
+.loading-step{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--hint);transition:color .4s;}
+.loading-step.active{color:var(--text);}
+.loading-step.done{color:var(--accent);}
+.step-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
+
+/* Result state */
+.result-state{display:none;flex-direction:column;gap:1.25rem;animation:fadeUp .4s ease both;}
+.result-state.show{display:flex;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.result-header{display:flex;align-items:center;justify-content:space-between;}
+.result-title{font-family:var(--font-head);font-size:14px;font-weight:700;}
+.result-actions{display:flex;gap:6px;}
+.action-btn{padding:6px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;}
+.action-btn:hover{border-color:var(--border-h);color:var(--text);}
+.action-btn.copied{border-color:rgba(212,255,71,0.4);color:var(--accent);background:rgba(212,255,71,0.06);}
+
+/* Prompt output box */
+.prompt-output{background:var(--bg3);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.prompt-output-header{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.output-dots{display:flex;gap:5px;}
+.output-dot{width:10px;height:10px;border-radius:50%;}
+.d1{background:rgba(255,95,87,0.6);}
+.d2{background:rgba(255,189,68,0.6);}
+.d3{background:rgba(39,201,63,0.6);}
+.output-label{font-size:11px;color:var(--hint);margin-left:4px;}
+#promptResult{padding:1.25rem;font-family:var(--font-mono);font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;word-break:break-word;min-height:200px;max-height:380px;overflow-y:auto;}
+#promptResult::-webkit-scrollbar{width:4px;}
+#promptResult::-webkit-scrollbar-track{background:transparent;}
+#promptResult::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px;}
+
+/* Syntax highlight spans */
+.hl-role{color:#d4ff47;}
+.hl-instruction{color:#f0efe8;}
+.hl-constraint{color:#47c3ff;}
+.hl-format{color:#ff6b35;}
+.hl-example{color:#a78bfa;}
+
+/* Techniques used */
+.techniques-used{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;}
+.tu-title{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.tu-list{display:flex;flex-direction:column;gap:8px;}
+.tu-item{display:flex;align-items:flex-start;gap:10px;}
+.tu-badge{font-size:10px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:2px 7px;border-radius:4px;flex-shrink:0;margin-top:1px;}
+.tu-lime{background:rgba(212,255,71,0.12);color:#a8cc34;}
+.tu-blue{background:rgba(71,195,255,0.12);color:#5bb8e8;}
+.tu-orange{background:rgba(255,107,53,0.12);color:#e07a52;}
+.tu-purple{background:rgba(167,139,250,0.12);color:#a78bfa;}
+.tu-text{font-size:12px;color:var(--muted);line-height:1.5;}
+.tu-text strong{color:var(--text);font-weight:500;}
+
+/* Refine & test row */
+.bottom-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.bottom-btn{padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-family:var(--font-body);font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.bottom-btn:hover{border-color:var(--border-h);color:var(--text);background:var(--bg4);}
+.bottom-btn.accent{background:rgba(212,255,71,0.08);border-color:rgba(212,255,71,0.25);color:var(--accent);}
+.bottom-btn.accent:hover{background:rgba(212,255,71,0.14);}
+
+/* Score bar */
+.score-bar{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;}
+.score-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.score-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);}
+.score-num{font-family:var(--font-head);font-size:1.4rem;font-weight:800;color:var(--accent);}
+.score-track{height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+.score-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 1s ease;}
+
+/* History */
+.history-section{margin-top:.5rem;}
+.history-label{font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--hint);margin-bottom:8px;}
+.history-list{display:flex;flex-direction:column;gap:4px;}
+.history-item{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg2);font-size:12px;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-item:hover{border-color:var(--border-h);color:var(--text);}
+
+/* Refine input */
+.refine-box{background:var(--bg3);border:1px solid rgba(212,255,71,0.2);border-radius:10px;padding:10px 14px;display:none;animation:fadeUp .3s ease both;}
+.refine-box.show{display:block;}
+.refine-input{width:100%;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font-body);font-size:13px;font-weight:300;resize:none;line-height:1.5;}
+.refine-footer{display:flex;justify-content:flex-end;margin-top:8px;}
+.refine-send{padding:6px 14px;background:var(--accent);border:none;border-radius:7px;color:#080809;font-family:var(--font-body);font-size:12px;font-weight:600;cursor:pointer;transition:opacity .2s;}
+.refine-send:hover{opacity:.88;}
+
+@media(max-width:900px){
+  .gen-layout{grid-template-columns:1fr;}
+  .input-panel{border-right:none;border-bottom:1px solid var(--border);}
+}
+@media(max-width:768px){
+  .sidebar{display:none;}
+  .main{margin-left:0;}
+}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+    <span class="logo-dot"></span>PromptCraft
+  </a>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item"><span class="icon">⚡</span>Dashboard</a>
+    <a href="generator.html" class="nav-item active"><span class="icon">✨</span>Generate</a>
+    <a href="#" class="nav-item"><span class="icon">📁</span>My Prompts</a>
+    <div class="nav-sec">Explore</div>
+    <a href="#" class="nav-item"><span class="icon">📚</span>Templates</a>
+    <a href="#" class="nav-item"><span class="icon">🔬</span>LLM Compare</a>
+    <div class="nav-sec">Settings</div>
+    <a href="#" class="nav-item"><span class="icon">⚙️</span>Settings</a>
+    <a href="#" class="nav-item"><span class="icon">🔑</span>API Keys</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="user-card">
+      <div class="avatar">AK</div>
+      <div class="user-info">
+        <div class="name">Arjun Kumar</div>
+        <div class="plan">Free plan · 2 left today</div>
+      </div>
+      <span class="chevron">›</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">Prompt Generator</div>
+      <div class="credits-pill"><span id="creditsLeft">2</span> generations left today</div>
+    </div>
+  </div>
+
+  <div class="gen-layout">
+
+    <!-- LEFT: Input -->
+    <div class="input-panel">
+      <div class="panel-header">
+        <div class="panel-title">What do you want to achieve?</div>
+        <div class="panel-sub">Describe your goal in plain language. The more specific, the better.</div>
+      </div>
+
+      <div class="goal-box">
+        <div class="goal-label">Your goal</div>
+        <textarea id="goalInput" placeholder="e.g. I want Claude to help me write cold emails for my SaaS product that get high reply rates from startup founders..." oninput="updateChar()"></textarea>
+        <div class="goal-footer">
+          <span class="char-count"><span id="charCount">0</span> / 500</span>
+          <button class="example-btn" onclick="loadExample()">Try an example →</button>
+        </div>
+      </div>
+
+      <div class="options-row">
+        <div class="option-group">
+          <label>Target model</label>
+          <select id="modelSelect">
+            <option value="claude">Claude (Anthropic)</option>
+            <option value="chatgpt">ChatGPT (OpenAI)</option>
+            <option value="gemini">Gemini (Google)</option>
+            <option value="llama">Llama (Meta)</option>
+            <option value="any">Any model</option>
+          </select>
+        </div>
+        <div class="option-group">
+          <label>Prompt style</label>
+          <select id="styleSelect">
+            <option value="structured">Structured & detailed</option>
+            <option value="concise">Short & concise</option>
+            <option value="conversational">Conversational</option>
+            <option value="technical">Technical / developer</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <div class="tech-label">Techniques to apply</div>
+        <div class="tech-pills">
+          <span class="tech-pill on" onclick="togglePill(this)">Role assignment</span>
+          <span class="tech-pill on" onclick="togglePill(this)">Chain-of-thought</span>
+          <span class="tech-pill" onclick="togglePill(this)">Few-shot examples</span>
+          <span class="tech-pill on" onclick="togglePill(this)">Output format</span>
+          <span class="tech-pill" onclick="togglePill(this)">Constraints</span>
+          <span class="tech-pill" onclick="togglePill(this)">Step-by-step</span>
+          <span class="tech-pill" onclick="togglePill(this)">Persona tone</span>
+        </div>
+      </div>
+
+      <button class="gen-btn" id="genBtn" onclick="generatePrompt()">
+        <span class="btn-icon">⚡</span>
+        Generate perfect prompt
+      </button>
+
+      <div class="history-section" id="historySection" style="display:none">
+        <div class="history-label">Recent</div>
+        <div class="history-list" id="historyList"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Output -->
+    <div class="output-panel">
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-orbit"></div>
+        <div class="empty-title">Your prompt will appear here</div>
+        <div class="empty-sub">Describe your goal on the left and hit Generate. We'll craft the perfect prompt for you in seconds.</div>
+      </div>
+
+      <!-- Loading state -->
+      <div class="loading-state" id="loadingState">
+        <div class="loading-dots">
+          <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+        </div>
+        <div class="loading-steps">
+          <div class="loading-step" id="ls1"><span class="step-dot"></span>Analysing your goal...</div>
+          <div class="loading-step" id="ls2"><span class="step-dot"></span>Selecting techniques...</div>
+          <div class="loading-step" id="ls3"><span class="step-dot"></span>Crafting your prompt...</div>
+          <div class="loading-step" id="ls4"><span class="step-dot"></span>Optimising for your model...</div>
+        </div>
+      </div>
+
+      <!-- Result state -->
+      <div class="result-state" id="resultState">
+
+        <div class="result-header">
+          <div class="result-title">Your optimised prompt</div>
+          <div class="result-actions">
+            <button class="action-btn" id="copyBtn" onclick="copyPrompt()">⎘ Copy</button>
+            <button class="action-btn" onclick="savePrompt()">♡ Save</button>
+          </div>
+        </div>
+
+        <div class="prompt-output">
+          <div class="prompt-output-header">
+            <div class="output-dots">
+              <div class="output-dot d1"></div>
+              <div class="output-dot d2"></div>
+              <div class="output-dot d3"></div>
+            </div>
+            <span class="output-label" id="modelLabel">Claude prompt</span>
+          </div>
+          <div id="promptResult"></div>
+        </div>
+
+        <div class="score-bar">
+          <div class="score-header">
+            <div class="score-label">Prompt quality score</div>
+            <div class="score-num" id="scoreNum">--</div>
+          </div>
+          <div class="score-track">
+            <div class="score-fill" id="scoreFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="techniques-used">
+          <div class="tu-title">Techniques applied</div>
+          <div class="tu-list" id="techniquesList"></div>
+        </div>
+
+        <div class="bottom-row">
+          <button class="bottom-btn" onclick="toggleRefine()">✏️ Refine this prompt</button>
+          <button class="bottom-btn accent" onclick="testPrompt()">🔬 Test on models →</button>
+        </div>
+
+        <div class="refine-box" id="refineBox">
+          <textarea class="refine-input" id="refineInput" rows="2" placeholder="e.g. Make it shorter, add a step-by-step structure, make it more formal..."></textarea>
+          <div class="refine-footer">
+            <button class="refine-send" onclick="applyRefine()">Apply refinement →</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXAMPLES = [
+  "I want Claude to help me write cold emails for my SaaS product targeting startup founders. The emails should feel personal, not salesy, and end with a low-effort call to action.",
+  "Help me debug my React code. I need an AI that acts like a senior engineer who explains what's wrong and why, not just gives me the fix.",
+  "I want to use ChatGPT to generate product descriptions for my e-commerce store that are SEO-optimised and conversion-focused.",
+  "I need Gemini to help me summarise long research papers into a 3-bullet executive summary that a non-technical CEO can understand.",
+  "Help me write a weekly newsletter for developers about AI tools. It should be opinionated, punchy, and under 300 words.",
+];
+
+const PROMPT_TEMPLATES = {
+  "cold email": {
+    prompt: `<span class="hl-role">You are an expert B2B copywriter</span> who specialises in cold email outreach for SaaS products. You have written emails that achieve 30%+ reply rates.
+
+<span class="hl-instruction">Write a cold outreach email for [PRODUCT NAME] targeting startup founders.</span>
+
+<span class="hl-constraint">Constraints:
+— Maximum 150 words
+— No buzzwords or jargon
+— Never start with "I hope this email finds you well"
+— Do not end with a hard sell</span>
+
+<span class="hl-format">Structure:
+1. Hook (1 sentence — specific pain point)
+2. Credibility (1 sentence — who you help)
+3. Value proposition (2 sentences)
+4. Low-friction CTA (1 question, not a demand)</span>
+
+<span class="hl-example">Tone: Confident but human. Write like a founder talking to another founder.</span>`,
+    techniques: [
+      {badge:"tu-lime",label:"Role assignment","desc":"Assigned expert copywriter persona with specific metric (30% reply rates) to anchor credibility"},
+      {badge:"tu-blue",label:"Output format","desc":"Strict word limit + numbered structure ensures focused, scannable output"},
+      {badge:"tu-orange",label:"Constraints","desc":"Explicit 'never do' rules prevent the most common AI email failures"},
+      {badge:"tu-purple",label:"Chain-of-thought","desc":"Hook → Credibility → Value → CTA guides the model through proven email logic"},
+    ],
+    score: 94
+  },
+  "debug": {
+    prompt: `<span class="hl-role">You are a senior React engineer</span> with 8+ years of experience. You care deeply about code quality, performance, and teaching.
+
+<span class="hl-instruction">Analyse the React component I'm about to share. Identify all bugs, performance issues, and violations of React best practices.</span>
+
+<span class="hl-format">For each issue found, respond in this exact format:
+❌ ISSUE: [Brief description]
+📍 LOCATION: [Line or function name]
+💡 WHY IT'S A PROBLEM: [Plain English explanation]
+✅ FIX: [Corrected code snippet]</span>
+
+<span class="hl-constraint">Rules:
+— Prioritise issues by severity (Critical → Warning → Suggestion)
+— Explain WHY each fix works, don't just give the answer
+— If the code is fine, say so clearly instead of inventing issues</span>
+
+<span class="hl-example">After all issues, add a "Overall Assessment" with a 1-10 code quality score and one thing done well.</span>`,
+    techniques: [
+      {badge:"tu-lime",label:"Role assignment","desc":"Senior engineer with explicit teaching emphasis produces better explanations, not just fixes"},
+      {badge:"tu-blue",label:"Output format","desc":"Structured ❌/📍/💡/✅ template makes issues scannable and actionable"},
+      {badge:"tu-orange",label:"Step-by-step","desc":"Severity ordering (Critical → Warning → Suggestion) guides systematic review"},
+      {badge:"tu-purple",label:"Constraints","desc":"'Explain WHY' rule prevents shallow fixes; honesty rule prevents hallucinated issues"},
+    ],
+    score: 91
+  },
+  "newsletter": {
+    prompt: `<span class="hl-role">You are a sharp, opinionated tech newsletter editor</span> who writes for senior developers and technical founders. Your readers are busy and allergic to fluff.
+
+<span class="hl-instruction">Write this week's newsletter covering the 3 most important developments in AI tools for developers.</span>
+
+<span class="hl-format">Format:
+— Subject line (under 50 chars, no clickbait)
+— Opening hook (1 punchy sentence)
+— 3 items, each with: bold headline + 2-3 sentence take
+— One-line sign-off that feels human</span>
+
+<span class="hl-constraint">Hard rules:
+— Under 300 words total
+— No "exciting", "revolutionary", "game-changing"
+— Every item must have a clear "so what" for developers
+— Your opinion counts — take a stance</span>
+
+<span class="hl-example">Voice: Imagine a brilliant colleague sending you a Slack message, not a press release.</span>`,
+    techniques: [
+      {badge:"tu-lime",label:"Persona tone","desc":"'Slack message not press release' metaphor gives the model a precise voice to match"},
+      {badge:"tu-blue",label:"Output format","desc":"Exact structure with character limits and section names ensures consistent, paste-ready output"},
+      {badge:"tu-orange",label:"Constraints","desc":"Banned word list directly eliminates the most common AI writing failures"},
+      {badge:"tu-purple",label:"Role assignment","desc":"Opinionated editor persona encourages takes, not just summaries"},
+    ],
+    score: 89
+  },
+  "default": {
+    prompt: `<span class="hl-role">You are an expert assistant</span> with deep knowledge in the relevant domain. Approach this task with precision and clarity.
+
+<span class="hl-instruction">Complete the following task thoroughly, addressing all aspects the user cares about:</span>
+[Your specific task here]
+
+<span class="hl-format">Structure your response as follows:
+1. Brief overview (2-3 sentences)
+2. Main content (organised logically)
+3. Key takeaways or next steps</span>
+
+<span class="hl-constraint">Guidelines:
+— Be specific and concrete, not vague
+— Use examples where helpful
+— If uncertain about something, say so
+— Prioritise quality over length</span>
+
+<span class="hl-example">Tone: Professional but approachable. Match the complexity of the topic.</span>`,
+    techniques: [
+      {badge:"tu-lime",label:"Role assignment","desc":"Expert persona anchors the model to produce high-quality, domain-aware output"},
+      {badge:"tu-blue",label:"Output format","desc":"Three-part structure ensures comprehensive yet organised responses"},
+      {badge:"tu-orange",label:"Constraints","desc":"Honesty rule and quality-over-length guideline prevent padding and hallucination"},
+      {badge:"tu-purple",label:"Chain-of-thought","desc":"Logical organisation instruction guides step-by-step reasoning"},
+    ],
+    score: 82
+  }
+};
+
+let history = [];
+let currentPrompt = '';
+let credits = 2;
+
+function updateChar() {
+  const len = document.getElementById('goalInput').value.length;
+  document.getElementById('charCount').textContent = len;
+}
+
+function togglePill(el) {
+  el.classList.toggle('on');
+}
+
+function loadExample() {
+  const ex = EXAMPLES[Math.floor(Math.random() * EXAMPLES.length)];
+  const ta = document.getElementById('goalInput');
+  ta.value = ex;
+  updateChar();
+  ta.focus();
+}
+
+function getTemplate(goal) {
+  const g = goal.toLowerCase();
+  if (g.includes('email') || g.includes('cold') || g.includes('outreach')) return PROMPT_TEMPLATES['cold email'];
+  if (g.includes('debug') || g.includes('code') || g.includes('react') || g.includes('bug')) return PROMPT_TEMPLATES['debug'];
+  if (g.includes('newsletter') || g.includes('write') || g.includes('content')) return PROMPT_TEMPLATES['newsletter'];
+  return PROMPT_TEMPLATES['default'];
+}
+
+function generatePrompt() {
+  const goal = document.getElementById('goalInput').value.trim();
+  if (!goal) {
+    document.getElementById('goalInput').focus();
+    document.getElementById('goalInput').style.borderColor = 'rgba(255,79,79,0.4)';
+    setTimeout(() => document.getElementById('goalInput').style.borderColor = '', 1500);
+    return;
+  }
+  if (credits <= 0) {
+    alert('You\'ve used all your free generations today. Upgrade to Pro for unlimited generations!');
+    return;
+  }
+
+  // Show loading
+  document.getElementById('emptyState').classList.add('hidden');
+  document.getElementById('resultState').classList.remove('show');
+  document.getElementById('loadingState').classList.add('show');
+  document.getElementById('genBtn').disabled = true;
+
+  const steps = ['ls1','ls2','ls3','ls4'];
+  steps.forEach(s => { document.getElementById(s).className = 'loading-step'; });
+
+  let si = 0;
+  const interval = setInterval(() => {
+    if (si < steps.length) {
+      if (si > 0) document.getElementById(steps[si-1]).className = 'loading-step done';
+      document.getElementById(steps[si]).className = 'loading-step active';
+      si++;
+    }
+  }, 420);
+
+  setTimeout(() => {
+    clearInterval(interval);
+    steps.forEach(s => document.getElementById(s).className = 'loading-step done');
+
+    setTimeout(() => {
+      document.getElementById('loadingState').classList.remove('show');
+      showResult(goal);
+    }, 300);
+  }, 2000);
+}
+
+function showResult(goal) {
+  const tpl = getTemplate(goal);
+  const model = document.getElementById('modelSelect').value;
+  const modelNames = {claude:'Claude prompt',chatgpt:'ChatGPT prompt',gemini:'Gemini prompt',llama:'Llama prompt',any:'Universal prompt'};
+
+  currentPrompt = document.getElementById('promptResult').innerHTML = tpl.prompt;
+  document.getElementById('modelLabel').textContent = modelNames[model] || 'Optimised prompt';
+
+  // Score
+  document.getElementById('scoreNum').textContent = tpl.score + '/100';
+  setTimeout(() => {
+    document.getElementById('scoreFill').style.width = tpl.score + '%';
+  }, 200);
+
+  // Techniques
+  const tl = document.getElementById('techniquesList');
+  tl.innerHTML = tpl.techniques.map(t =>
+    `<div class="tu-item"><span class="tu-badge ${t.badge}">${t.label}</span><div class="tu-text"><strong>${t.desc.split(' — ')[0]}</strong>${t.desc.includes(' — ') ? ' — ' + t.desc.split(' — ')[1] : ''}</div></div>`
+  ).join('');
+
+  document.getElementById('resultState').classList.add('show');
+  document.getElementById('genBtn').disabled = false;
+
+  // Update history
+  credits--;
+  document.getElementById('creditsLeft').textContent = credits;
+  document.querySelector('.plan').textContent = `Free plan · ${credits} left today`;
+  addHistory(goal);
+}
+
+function addHistory(goal) {
+  const short = goal.length > 55 ? goal.slice(0, 55) + '…' : goal;
+  history.unshift({ goal, short });
+  if (history.length > 4) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const sec = document.getElementById('historySection');
+  const list = document.getElementById('historyList');
+  sec.style.display = 'block';
+  list.innerHTML = history.map((h, i) =>
+    `<div class="history-item" onclick="reloadHistory(${i})">${h.short}</div>`
+  ).join('');
+}
+
+function reloadHistory(i) {
+  document.getElementById('goalInput').value = history[i].goal;
+  updateChar();
+}
+
+function copyPrompt() {
+  const text = document.getElementById('promptResult').innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '⎘ Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function savePrompt() {
+  const btn = event.target;
+  btn.textContent = '♥ Saved';
+  btn.style.color = '#ff6b6b';
+  setTimeout(() => { btn.textContent = '♡ Save'; btn.style.color = ''; }, 2000);
+}
+
+function toggleRefine() {
+  const box = document.getElementById('refineBox');
+  box.classList.toggle('show');
+  if (box.classList.contains('show')) document.getElementById('refineInput').focus();
+}
+
+function applyRefine() {
+  const instruction = document.getElementById('refineInput').value.trim();
+  if (!instruction) return;
+  // Demo: just re-trigger with note
+  document.getElementById('refineBox').classList.remove('show');
+  document.getElementById('refineInput').value = '';
+  const goal = document.getElementById('goalInput').value + ` [Refinement: ${instruction}]`;
+  generatePrompt();
+}
+
+function testPrompt() {
+  alert('LLM Compare is a Pro feature!\n\nUpgrade to Pro (₹499/mo) to test your prompt on Claude, ChatGPT, and Gemini side-by-side.');
+}
+</script>
+</body>
+</html>
