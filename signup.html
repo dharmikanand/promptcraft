@@ -360,8 +360,8 @@
       <!-- Success -->
       <div class="success-box" id="successBox">
         <div class="success-icon">✓</div>
-        <h3>Check your email!</h3>
-        <p>We sent a confirmation link to <strong id="confirmedEmail"></strong>.<br>Click it to activate your account and get started.</p>
+        <h3>You're in! Taking you to your dashboard…</h3>
+        <p>Account created for <strong id="confirmedEmail"></strong>.<br>Redirecting you now...</p>
       </div>
 
       <div class="signin-link">Already have an account? <a href="login.html">Sign in</a></div>
@@ -435,6 +435,7 @@
       document.getElementById('signupForm').style.display = 'none';
       document.getElementById('confirmedEmail').textContent = email;
       document.getElementById('successBox').classList.add('show');
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1800);
     }, 1200);
   });
 

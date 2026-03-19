@@ -174,6 +174,9 @@
   <div class="bg-grid"></div>
 
   <div class="form-card">
+    <div style="background:rgba(212,255,71,0.07);border:1px solid rgba(212,255,71,0.2);border-radius:8px;padding:9px 14px;margin-bottom:1.5rem;font-size:12px;color:#a8cc34;text-align:center;">
+      ⚡ Demo mode — enter any email &amp; password to enter
+    </div>
     <div class="card-brand"><span class="logo-dot"></span>PromptCraft</div>
 
     <h2 class="form-heading">Welcome back</h2>
@@ -265,14 +268,9 @@
     const btn = document.getElementById('submitBtn');
     btn.disabled = true; btn.textContent = 'Signing in…';
 
-    /* ── SUPABASE INTEGRATION POINT ──
-       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-       if (error) { show alertError; btn.disabled = false; }
-       else { window.location.href = 'dashboard.html'; }
-    */
     setTimeout(() => {
       window.location.href = 'dashboard.html';
-    }, 1000);
+    }, 900);
   });
 
   function handleGoogle(e) {
