@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PromptCraft — Get the Best Outputs from Any AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #080809;
+    --bg2: #0f0f11;
+    --bg3: #161618;
+    --border: rgba(255,255,255,0.08);
+    --border-hover: rgba(255,255,255,0.16);
+    --text: #f0efe8;
+    --muted: rgba(240,239,232,0.5);
+    --accent: #d4ff47;
+    --accent2: #ff6b35;
+    --accent3: #47c3ff;
+    --font-head: 'Syne', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ── Grain overlay ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.6;
+  }
+
+  /* ── Nav ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 0 2rem;
+    height: 64px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(20px);
+    background: rgba(8,8,9,0.7);
+  }
+
+  .nav-logo {
+    font-family: var(--font-head);
+    font-size: 18px; font-weight: 800;
+    color: var(--text); text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.8); }
+  }
+
+  .nav-links {
+    display: flex; align-items: center; gap: 2rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted); text-decoration: none;
+    font-size: 14px; font-weight: 400;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); }
+  .nav-link-plain { color: var(--muted); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+  .nav-link-plain:hover { color: var(--text); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #080809 !important;
+    padding: 8px 18px;
+    border-radius: 6px;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    transition: opacity 0.2s, transform 0.1s !important;
+  }
+  .nav-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 120px 2rem 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-grid {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(ellipse 80% 70% at 50% 50%, black 30%, transparent 100%);
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,255,71,0.08) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--border-hover);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 13px; font-weight: 400;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    background: rgba(255,255,255,0.03);
+    animation: fadeUp 0.6s ease both;
+  }
+
+  .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+  }
+
+  .hero h1 {
+    font-family: var(--font-head);
+    font-size: clamp(3rem, 8vw, 6.5rem);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.5rem;
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .hero h1 .line2 {
+    display: block;
+    color: var(--accent);
+  }
+
+  .hero h1 .line3 {
+    display: block;
+    color: var(--muted);
+    font-weight: 400;
+    font-style: italic;
+    font-size: 0.6em;
+    letter-spacing: -0.01em;
+    margin-top: 0.3em;
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 2vw, 1.2rem);
+    color: var(--muted);
+    max-width: 540px;
+    margin: 0 auto 2.5rem;
+    font-weight: 300;
+    line-height: 1.7;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .hero-actions {
+    display: flex; align-items: center; justify-content: center; gap: 1rem;
+    flex-wrap: wrap;
+    animation: fadeUp 0.6s ease 0.3s both;
+  }
+
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent);
+    color: #080809;
+    font-family: var(--font-body);
+    font-size: 15px; font-weight: 600;
+    padding: 14px 28px; border-radius: 8px;
+    border: none; cursor: pointer; text-decoration: none;
+    transition: transform 0.15s, opacity 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 15px; font-weight: 400;
+    padding: 14px 28px; border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer; text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .btn-secondary:hover { border-color: var(--border-hover); color: var(--text); }
+
+  /* ── Marquee / social proof ── */
+  .marquee-section {
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .marquee-track {
+    display: flex; gap: 3rem; width: max-content;
+    animation: marquee 30s linear infinite;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  .marquee-item {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 13px; color: var(--muted); white-space: nowrap;
+    font-weight: 300;
+  }
+
+  .marquee-item strong {
+    color: var(--text); font-weight: 500;
+  }
+
+  .marquee-sep {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--border-hover);
+  }
+
+  /* ── Section base ── */
+  section { padding: 100px 2rem; }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1rem;
+  }
+
+  .section-title {
+    font-family: var(--font-head);
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1.25rem;
+  }
+
+  .section-sub {
+    font-size: 1.05rem;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 500px;
+    line-height: 1.7;
+  }
+
+  /* ── How it works ── */
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    margin-top: 4rem;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--border);
+  }
+
+  .step {
+    background: var(--bg2);
+    padding: 2.5rem;
+    position: relative;
+    transition: background 0.2s;
+  }
+  .step:hover { background: var(--bg3); }
+
+  .step-num {
+    font-family: var(--font-head);
+    font-size: 4rem; font-weight: 800;
+    color: rgba(255,255,255,0.04);
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    user-select: none;
+  }
+
+  .step-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    border: 1px solid var(--border-hover);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 1.2rem;
+    background: rgba(255,255,255,0.03);
+  }
+
+  .step h3 {
+    font-family: var(--font-head);
+    font-size: 1.15rem; font-weight: 700;
+    margin-bottom: 0.6rem;
+    letter-spacing: -0.01em;
+  }
+
+  .step p {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.65; font-weight: 300;
+  }
+
+  /* ── Features ── */
+  #features { background: var(--bg); }
+
+  .features-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    margin-top: 4rem;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .feature {
+    background: var(--bg2);
+    padding: 2.5rem;
+    transition: background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature:hover { background: var(--bg3); }
+
+  .feature::before {
+    content: '';
+    position: absolute;
+    width: 120px; height: 120px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .feature:nth-child(1)::before { background: radial-gradient(circle, rgba(212,255,71,0.12), transparent 70%); top: -40px; left: -40px; }
+  .feature:nth-child(2)::before { background: radial-gradient(circle, rgba(71,195,255,0.12), transparent 70%); top: -40px; right: -40px; left: auto; }
+  .feature:nth-child(3)::before { background: radial-gradient(circle, rgba(255,107,53,0.12), transparent 70%); bottom: -40px; left: -40px; top: auto; }
+  .feature:nth-child(4)::before { background: radial-gradient(circle, rgba(212,255,71,0.08), transparent 70%); bottom: -40px; right: -40px; left: auto; top: auto; }
+
+  .feature:hover::before { opacity: 1; }
+
+  .feature-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px;
+    margin-bottom: 1.2rem;
+  }
+
+  .tag-lime { background: rgba(212,255,71,0.12); color: var(--accent); }
+  .tag-blue { background: rgba(71,195,255,0.12); color: var(--accent3); }
+  .tag-orange { background: rgba(255,107,53,0.12); color: var(--accent2); }
+  .tag-white { background: rgba(255,255,255,0.07); color: var(--text); }
+
+  .feature h3 {
+    font-family: var(--font-head);
+    font-size: 1.3rem; font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 0.75rem;
+  }
+
+  .feature p {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.7; font-weight: 300;
+    margin-bottom: 1.5rem;
+  }
+
+  .feature-list {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+
+  .feature-list li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: var(--muted);
+  }
+
+  .feature-list li::before {
+    content: '→';
+    color: var(--accent);
+    font-size: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .feature.wide {
+    grid-column: span 2;
+  }
+
+  /* ── Prompt demo ── */
+  .demo-section {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .demo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 3rem;
+    align-items: start;
+  }
+
+  .demo-box {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .demo-header {
+    background: var(--bg3);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: var(--muted);
+    font-weight: 500;
+  }
+
+  .demo-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .demo-bad .demo-dot { background: rgba(255,107,53,0.6); }
+  .demo-good .demo-dot { background: rgba(212,255,71,0.6); }
+
+  .demo-content {
+    padding: 1.5rem;
+    font-family: 'DM Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  .demo-bad .demo-content {
+    color: rgba(255,107,53,0.8);
+  }
+
+  .demo-good .demo-content {
+    color: var(--muted);
+  }
+
+  .demo-good .demo-content span {
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .demo-arrow {
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2rem;
+    color: var(--accent);
+    align-self: center;
+  }
+
+  /* ── Models ── */
+  .models-section { background: var(--bg); }
+
+  .models-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 3rem;
+  }
+
+  .model-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.25rem;
+    text-align: center;
+    background: var(--bg2);
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: default;
+  }
+
+  .model-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-3px);
+  }
+
+  .model-emoji { font-size: 1.8rem; margin-bottom: 8px; }
+  .model-name { font-size: 13px; font-weight: 600; color: var(--text); font-family: var(--font-head); }
+  .model-maker { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  /* ── Pricing ── */
+  #pricing { background: var(--bg2); border-top: 1px solid var(--border); }
+
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    margin-top: 3.5rem;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  .price-card {
+    background: var(--bg);
+    padding: 2.5rem 2rem;
+    position: relative;
+  }
+
+  .price-card.featured {
+    background: var(--bg3);
+  }
+
+  .price-badge {
+    font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #080809;
+    background: var(--accent);
+    padding: 4px 10px; border-radius: 4px;
+    display: inline-block; margin-bottom: 1.25rem;
+  }
+
+  .price-plan {
+    font-family: var(--font-head);
+    font-size: 1rem; font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.5rem;
+  }
+
+  .price-amount {
+    font-family: var(--font-head);
+    font-size: 3.5rem; font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  .price-amount sup {
+    font-size: 1.5rem;
+    vertical-align: super;
+    font-weight: 400;
+  }
+
+  .price-period {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 2rem;
+  }
+
+  .price-features {
+    list-style: none;
+    display: flex; flex-direction: column; gap: 10px;
+    margin-bottom: 2rem;
+  }
+
+  .price-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: var(--muted); font-weight: 300;
+  }
+
+  .check { color: var(--accent); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+  .cross { color: rgba(255,255,255,0.2); font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+  .price-btn {
+    width: 100%; padding: 12px;
+    border-radius: 8px; border: 1px solid var(--border);
+    background: transparent; color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: border-color 0.2s, background 0.2s;
+  }
+
+  .price-btn:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
+
+  .price-btn.accent-btn {
+    background: var(--accent); border-color: var(--accent);
+    color: #080809; font-weight: 600;
+  }
+
+  .price-btn.accent-btn:hover { opacity: 0.88; }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: var(--bg);
+    text-align: center;
+  }
+
+  .cta-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 5rem 2rem;
+    position: relative;
+  }
+
+  .cta-inner::before {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,255,71,0.06) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .cta-inner h2 {
+    font-family: var(--font-head);
+    font-size: clamp(2.2rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    margin-bottom: 1.25rem;
+    position: relative;
+  }
+
+  .cta-inner h2 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .cta-inner p {
+    color: var(--muted); font-weight: 300;
+    font-size: 1.05rem; margin-bottom: 2.5rem;
+    position: relative;
+  }
+
+  /* ── Footer ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 2.5rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+  }
+
+  .footer-logo {
+    font-family: var(--font-head);
+    font-size: 16px; font-weight: 800;
+    color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .footer-links {
+    display: flex; gap: 2rem; list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 13px; color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--text); }
+
+  .footer-copy {
+    font-size: 12px; color: rgba(255,255,255,0.2);
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  .reveal.visible {
+    opacity: 1; transform: translateY(0);
+  }
+
+  /* ── Type cursor ── */
+  #typed-text::after {
+    content: '|';
+    animation: blink 1s step-end infinite;
+    color: var(--accent);
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    nav { padding: 0 1rem; }
+    .nav-links { display: none; }
+    section { padding: 70px 1rem; }
+    .features-layout { grid-template-columns: 1fr; }
+    .feature.wide { grid-column: span 1; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .demo-layout { grid-template-columns: 1fr; }
+    .demo-arrow { transform: rotate(90deg); }
+    .steps-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <a href="index.html" class="nav-logo">
+    <span class="logo-dot"></span>
+    PromptCraft
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how-it-works">How it works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="login.html" class="nav-link" style="margin-right:4px">Sign in</a></li>
+    <li><a href="signup.html" class="nav-cta">Get started free</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-glow"></div>
+  <div class="hero-inner">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Works with Claude · ChatGPT · Gemini · Llama
+    </div>
+
+    <h1>
+      Stop getting<br>
+      <span class="line2" id="typed-text">average answers.</span>
+      <span class="line3">craft the perfect prompt.</span>
+    </h1>
+
+    <p class="hero-sub">
+      PromptCraft helps you build, optimize, and test prompts that get extraordinary outputs from any AI model — in seconds.
+    </p>
+
+    <div class="hero-actions">
+      <a href="signup.html" class="btn-primary">
+        Start for free
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#how-it-works" class="btn-secondary">
+        See how it works
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Marquee -->
+<div class="marquee-section">
+  <div class="marquee-track" id="marquee">
+    <span class="marquee-item"><strong>10x better outputs</strong> from the same AI</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item">AI-powered prompt generator</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item"><strong>Side-by-side</strong> model comparison</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item">500+ expert prompt templates</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item"><strong>Save & organize</strong> your best prompts</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item">Works with every major AI model</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item"><strong>10x better outputs</strong> from the same AI</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item">AI-powered prompt generator</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item"><strong>Side-by-side</strong> model comparison</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item">500+ expert prompt templates</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item"><strong>Save & organize</strong> your best prompts</span>
+    <span class="marquee-sep"></span>
+    <span class="marquee-item">Works with every major AI model</span>
+    <span class="marquee-sep"></span>
+  </div>
+</div>
+
+<!-- How it works -->
+<section id="how-it-works">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">How it works</p>
+      <h2 class="section-title">From vague idea to<br>perfect prompt in seconds</h2>
+      <p class="section-sub">No prompt engineering degree required. Just describe what you want.</p>
+    </div>
+
+    <div class="steps-grid reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-icon">💬</div>
+        <h3>Describe your goal</h3>
+        <p>Tell us what you're trying to achieve in plain language. "I want Claude to help me write better cold emails" — that's enough.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-icon">⚡</div>
+        <h3>AI crafts your prompt</h3>
+        <p>Our engine analyzes your intent and builds an expert-level prompt using proven techniques — role framing, chain-of-thought, examples, and more.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-icon">🔬</div>
+        <h3>Test across all models</h3>
+        <p>Run your prompt on Claude, ChatGPT, Gemini, and Llama side-by-side. See which model gives you the best output instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-icon">📁</div>
+        <h3>Save & reuse forever</h3>
+        <p>Save your winning prompts to your personal library. Organize by project, share with your team, and version them as you improve.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Before / After demo -->
+<section class="demo-section">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">The difference</p>
+      <h2 class="section-title">See what a great prompt<br>actually looks like</h2>
+    </div>
+
+    <div class="demo-layout reveal">
+      <div class="demo-box demo-bad">
+        <div class="demo-header">
+          <span class="demo-dot"></span>
+          Without PromptCraft
+        </div>
+        <div class="demo-content">
+          "Write me a marketing email for my product"
+        </div>
+      </div>
+
+      <div class="demo-arrow">→</div>
+
+      <div class="demo-box demo-good">
+        <div class="demo-header">
+          <span class="demo-dot"></span>
+          With PromptCraft
+        </div>
+        <div class="demo-content">
+          <span>You are an expert B2B copywriter</span> specializing in SaaS products. Write a cold outreach email for <span>[product]</span> targeting <span>[audience]</span>.<br><br>
+          <span>Tone:</span> Professional but conversational. No fluff.<br>
+          <span>Structure:</span> Hook → Pain → Solution → CTA<br>
+          <span>Length:</span> Under 150 words.<br>
+          <span>End with</span> a low-friction question, not a hard sell.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Features</p>
+      <h2 class="section-title">Everything you need to<br>master any AI model</h2>
+      <p class="section-sub">Four powerful tools in one place. Built for people who want real results.</p>
+    </div>
+
+    <div class="features-layout reveal">
+      <div class="feature">
+        <span class="feature-tag tag-lime">AI Generator</span>
+        <h3>Describe it, get the prompt</h3>
+        <p>Type your goal in plain English. Our AI generates an expert-level prompt using proven techniques — role assignment, few-shot examples, chain-of-thought, constraints.</p>
+        <ul class="feature-list">
+          <li>Understands any use case</li>
+          <li>Explains every technique used</li>
+          <li>One-click copy to clipboard</li>
+          <li>Refine with follow-up requests</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <span class="feature-tag tag-blue">Template Library</span>
+        <h3>500+ expert templates, ready to use</h3>
+        <p>Browse a growing library of battle-tested prompts for coding, writing, analysis, marketing, research, and more. Filter by model, use case, and rating.</p>
+        <ul class="feature-list">
+          <li>Sorted by category and use case</li>
+          <li>Community ratings and reviews</li>
+          <li>One-click clone and customize</li>
+          <li>New templates added weekly</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <span class="feature-tag tag-orange">LLM Comparison</span>
+        <h3>Find which AI actually wins</h3>
+        <p>Run any prompt on multiple models simultaneously and compare outputs side-by-side. Stop guessing — see the results in real time with token counts and cost estimates.</p>
+        <ul class="feature-list">
+          <li>Claude, ChatGPT, Gemini, Llama</li>
+          <li>Side-by-side output view</li>
+          <li>Cost and speed comparison</li>
+          <li>Rate responses to train your taste</li>
+        </ul>
+      </div>
+
+      <div class="feature">
+        <span class="feature-tag tag-white">Workspace</span>
+        <h3>Your personal prompt library</h3>
+        <p>Save, version, and organize every prompt you create. Never lose a great prompt again. Share with your team or export for use anywhere.</p>
+        <ul class="feature-list">
+          <li>Folders, tags, and search</li>
+          <li>Full version history</li>
+          <li>Share via link or export JSON</li>
+          <li>Team collaboration (Pro)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Models -->
+<section class="models-section">
+  <div class="container">
+    <div class="reveal" style="text-align: center; margin-bottom: 1rem;">
+      <p class="section-label" style="display:inline-block">Supported models</p>
+      <h2 class="section-title" style="max-width:500px; margin: 0.5rem auto 0.75rem;">Works with every<br>major AI model</h2>
+      <p class="section-sub" style="margin: 0 auto;">Your prompts, your API keys, your models. We just make them better.</p>
+    </div>
+
+    <div class="models-grid reveal">
+      <div class="model-card">
+        <div class="model-emoji">🟠</div>
+        <div class="model-name">Claude</div>
+        <div class="model-maker">Anthropic</div>
+      </div>
+      <div class="model-card">
+        <div class="model-emoji">🟢</div>
+        <div class="model-name">ChatGPT</div>
+        <div class="model-maker">OpenAI</div>
+      </div>
+      <div class="model-card">
+        <div class="model-emoji">🔵</div>
+        <div class="model-name">Gemini</div>
+        <div class="model-maker">Google</div>
+      </div>
+      <div class="model-card">
+        <div class="model-emoji">🦙</div>
+        <div class="model-name">Llama 3</div>
+        <div class="model-maker">Meta</div>
+      </div>
+      <div class="model-card">
+        <div class="model-emoji">🌊</div>
+        <div class="model-name">Mistral</div>
+        <div class="model-maker">Mistral AI</div>
+      </div>
+      <div class="model-card">
+        <div class="model-emoji">🔮</div>
+        <div class="model-name">Grok</div>
+        <div class="model-maker">xAI</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing">
+  <div class="container">
+    <div class="reveal">
+      <p class="section-label">Pricing</p>
+      <h2 class="section-title">Start free.<br>Upgrade when you're ready.</h2>
+      <p class="section-sub">No credit card required to start. Cancel anytime.</p>
+    </div>
+
+    <div class="pricing-grid reveal">
+      <div class="price-card">
+        <div class="price-plan">Free</div>
+        <div class="price-amount">₹0</div>
+        <div class="price-period">forever</div>
+        <ul class="price-features">
+          <li><span class="check">✓</span> 5 AI prompt generations / day</li>
+          <li><span class="check">✓</span> Access to template library</li>
+          <li><span class="check">✓</span> Save up to 10 prompts</li>
+          <li><span class="check">✓</span> Test on 1 model</li>
+          <li><span class="cross">✕</span> LLM comparison</li>
+          <li><span class="cross">✕</span> Unlimited saves</li>
+          <li><span class="cross">✕</span> Team workspace</li>
+        </ul>
+        <button class="price-btn" onclick="location.href='signup.html'">Get started free</button>
+      </div>
+
+      <div class="price-card featured">
+        <div class="price-badge">Most popular</div>
+        <div class="price-plan">Pro</div>
+        <div class="price-amount"><sup>₹</sup>499</div>
+        <div class="price-period">per month</div>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Unlimited prompt generations</li>
+          <li><span class="check">✓</span> Full template library + submit</li>
+          <li><span class="check">✓</span> Unlimited saves + version history</li>
+          <li><span class="check">✓</span> Side-by-side LLM comparison</li>
+          <li><span class="check">✓</span> Prompt optimizer scoring</li>
+          <li><span class="check">✓</span> Export prompts as JSON</li>
+          <li><span class="cross">✕</span> Team workspace</li>
+        </ul>
+        <button class="price-btn accent-btn" onclick="location.href='signup.html'">Start Pro — ₹499/mo</button>
+      </div>
+
+      <div class="price-card">
+        <div class="price-plan">Team</div>
+        <div class="price-amount"><sup>₹</sup>999</div>
+        <div class="price-period">per user / month</div>
+        <ul class="price-features">
+          <li><span class="check">✓</span> Everything in Pro</li>
+          <li><span class="check">✓</span> Shared team workspace</li>
+          <li><span class="check">✓</span> Shared prompt library</li>
+          <li><span class="check">✓</span> Admin controls</li>
+          <li><span class="check">✓</span> Priority support</li>
+          <li><span class="check">✓</span> Custom onboarding</li>
+          <li><span class="check">✓</span> API access (coming soon)</li>
+        </ul>
+        <button class="price-btn" onclick="location.href='mailto:hello@promptcraft.app'">Contact us</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="cta-inner reveal">
+    <h2>Stop leaving good<br>outputs on the table.<br><em>Start prompting better.</em></h2>
+    <p>Join thousands of people getting 10x better results from Claude, ChatGPT, and Gemini.</p>
+    <a href="signup.html" class="btn-primary" style="font-size:16px; padding:16px 36px;">
+      Get started free — no card needed
+    </a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">
+    <span class="logo-dot"></span>
+    PromptCraft
+  </div>
+  <ul class="footer-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="signup.html">Templates</a></li>
+    <li><a href="#">Privacy</a></li>
+    <li><a href="#">Terms</a></li>
+  </ul>
+  <div class="footer-copy">© 2025 PromptCraft. All rights reserved.</div>
+</footer>
+
+<script>
+  /* Typed hero effect */
+  const phrases = ["average answers.", "weak prompts.", "bad outputs.", "wasted tokens.", "average answers."];
+  let pi = 0, ci = 0, deleting = false;
+  const el = document.getElementById('typed-text');
+
+  function type() {
+    const word = phrases[pi];
+    if (!deleting) {
+      el.textContent = word.slice(0, ++ci);
+      if (ci === word.length) { deleting = true; setTimeout(type, 2000); return; }
+    } else {
+      el.textContent = word.slice(0, --ci);
+      if (ci === 0) { deleting = false; pi = (pi + 1) % (phrases.length - 1); }
+    }
+    setTimeout(type, deleting ? 50 : 80);
+  }
+  setTimeout(type, 1000);
+
+  /* Scroll reveal */
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        obs.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  reveals.forEach(r => obs.observe(r));
+
+  /* Duplicate marquee for seamless loop */
+  const track = document.getElementById('marquee');
+  track.innerHTML += track.innerHTML;
+</script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — PromptCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #080809; --bg2: #0f0f11; --bg3: #161618; --bg4: #1c1c1f;
+    --border: rgba(255,255,255,0.08); --border-hover: rgba(255,255,255,0.14);
+    --text: #f0efe8; --muted: rgba(240,239,232,0.5); --hint: rgba(240,239,232,0.28);
+    --accent: #d4ff47; --accent2: #ff6b35; --accent3: #47c3ff;
+    --sidebar-w: 230px;
+    --font-head: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    background: var(--bg2); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 50;
+  }
+
+  .sidebar-logo {
+    padding: 1.25rem 1.25rem 1rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-head); font-size: 16px; font-weight: 800; color: var(--text);
+    text-decoration: none;
+  }
+  .logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+  .sidebar-nav { flex: 1; padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 2px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 400; color: var(--muted);
+    text-decoration: none; cursor: pointer; border: none; background: none; width: 100%;
+    transition: background .15s, color .15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.04); color: var(--text); }
+  .nav-item.active { background: rgba(212,255,71,0.08); color: var(--accent); font-weight: 500; }
+  .nav-item .icon { width: 16px; text-align: center; font-size: 14px; flex-shrink: 0; }
+  .nav-badge { margin-left: auto; font-size: 10px; background: rgba(212,255,71,0.15); color: var(--accent); padding: 1px 6px; border-radius: 20px; font-weight: 600; }
+
+  .nav-section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hint); padding: 12px 12px 4px; }
+
+  .sidebar-footer {
+    padding: 0.75rem; border-top: 1px solid var(--border);
+  }
+
+  .user-card {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px;
+    cursor: pointer; transition: background .15s;
+    border: none; background: none; width: 100%; text-align: left;
+  }
+  .user-card:hover { background: rgba(255,255,255,0.04); }
+
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    background: rgba(212,255,71,0.15); border: 1px solid rgba(212,255,71,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: var(--accent); font-family: var(--font-head);
+  }
+  .user-name { font-size: 13px; font-weight: 500; color: var(--text); line-height: 1.2; }
+  .user-plan { font-size: 11px; color: var(--muted); }
+  .user-chevron { margin-left: auto; color: var(--hint); font-size: 12px; }
+
+  /* ── Main ── */
+  .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Top bar ── */
+  .topbar {
+    height: 58px; padding: 0 2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--bg); position: sticky; top: 0; z-index: 40;
+  }
+
+  .topbar-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+
+  .btn-new {
+    display: flex; align-items: center; gap: 7px;
+    background: var(--accent); color: #080809;
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer;
+    transition: opacity .2s, transform .1s; text-decoration: none;
+  }
+  .btn-new:hover { opacity: 0.88; transform: translateY(-1px); }
+
+  /* ── Page content ── */
+  .content { padding: 2rem; flex: 1; }
+
+  /* ── Greeting ── */
+  .greeting { margin-bottom: 2rem; }
+  .greeting h1 { font-family: var(--font-head); font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.25rem; }
+  .greeting p { font-size: 14px; color: var(--muted); font-weight: 300; }
+
+  /* ── Stats ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem 1.25rem 1rem;
+    transition: border-color .2s;
+  }
+  .stat-card:hover { border-color: var(--border-hover); }
+  .stat-label { font-size: 11px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 0.6rem; }
+  .stat-value { font-family: var(--font-head); font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+  .stat-change { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+  .stat-change.up { color: #7acc3a; }
+  .stat-change.neutral { color: var(--hint); }
+
+  /* ── Main grid ── */
+  .main-grid { display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem; }
+
+  /* ── Section header ── */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  .section-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; letter-spacing: -0.01em; }
+  .section-link { font-size: 12px; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .section-link:hover { color: var(--accent); }
+
+  /* ── Prompt cards ── */
+  .prompt-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .prompt-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1rem 1.25rem;
+    transition: border-color .2s, background .2s; cursor: pointer;
+  }
+  .prompt-card:hover { border-color: var(--border-hover); background: var(--bg3); }
+
+  .prompt-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 0.5rem; }
+  .prompt-title { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; }
+  .prompt-tag {
+    font-size: 10px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 4px; flex-shrink: 0; margin-top: 1px;
+  }
+  .tag-lime { background: rgba(212,255,71,0.1); color: #a8cc34; }
+  .tag-blue { background: rgba(71,195,255,0.1); color: #5bb8e8; }
+  .tag-orange { background: rgba(255,107,53,0.1); color: #e07a52; }
+  .tag-purple { background: rgba(167,139,250,0.1); color: #a78bfa; }
+
+  .prompt-preview { font-size: 12px; color: var(--muted); line-height: 1.5; font-weight: 300; margin-bottom: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .prompt-card-footer { display: flex; align-items: center; justify-content: space-between; }
+  .prompt-meta { display: flex; align-items: center; gap: 12px; }
+  .prompt-model { font-size: 11px; color: var(--hint); }
+  .prompt-date { font-size: 11px; color: var(--hint); }
+  .prompt-actions { display: flex; gap: 6px; }
+  .action-btn {
+    width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--border);
+    background: transparent; color: var(--muted); font-size: 12px;
+    cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center;
+  }
+  .action-btn:hover { border-color: var(--border-hover); color: var(--text); background: rgba(255,255,255,0.04); }
+
+  /* ── Right column ── */
+  .right-col { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  /* Quick generate */
+  .quick-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1.25rem; overflow: hidden; position: relative;
+  }
+  .quick-card::before {
+    content: ''; position: absolute; width: 200px; height: 200px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,255,71,0.07) 0%, transparent 70%);
+    top: -60px; right: -60px; pointer-events: none;
+  }
+
+  .quick-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; margin-bottom: 0.3rem; }
+  .quick-sub { font-size: 12px; color: var(--muted); margin-bottom: 1rem; font-weight: 300; line-height: 1.4; }
+
+  .quick-input {
+    width: 100%; padding: 10px 12px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-family: var(--font-body); font-size: 13px; font-weight: 300;
+    transition: border-color .2s; outline: none; resize: none;
+    min-height: 80px;
+  }
+  .quick-input::placeholder { color: var(--hint); }
+  .quick-input:focus { border-color: rgba(212,255,71,0.35); }
+
+  .quick-btn {
+    width: 100%; margin-top: 10px; padding: 10px;
+    background: var(--accent); border: none; border-radius: 8px;
+    color: #080809; font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity .2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .quick-btn:hover { opacity: 0.88; }
+
+  /* Usage */
+  .usage-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .usage-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+  .usage-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; }
+  .plan-badge { font-size: 11px; background: rgba(255,255,255,0.07); padding: 3px 8px; border-radius: 20px; color: var(--muted); font-weight: 500; }
+
+  .usage-item { margin-bottom: 1rem; }
+  .usage-item:last-child { margin-bottom: 0; }
+  .usage-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .usage-label span:last-child { color: var(--text); font-weight: 500; }
+  .usage-bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .usage-fill { height: 100%; border-radius: 2px; transition: width .6s ease; }
+  .fill-accent { background: var(--accent); }
+  .fill-blue { background: var(--accent3); }
+  .fill-orange { background: var(--accent2); }
+
+  .upgrade-btn {
+    width: 100%; margin-top: 1.25rem; padding: 9px;
+    background: transparent; border: 1px solid var(--border-hover);
+    border-radius: 8px; color: var(--muted);
+    font-family: var(--font-body); font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+  }
+  .upgrade-btn:hover { background: rgba(212,255,71,0.06); border-color: rgba(212,255,71,0.3); color: var(--accent); }
+
+  /* Activity */
+  .activity-card { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; }
+  .activity-title { font-family: var(--font-head); font-size: 14px; font-weight: 700; margin-bottom: 1rem; }
+
+  .activity-item { display: flex; align-items: flex-start; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+  .dot-lime { background: var(--accent); }
+  .dot-blue { background: var(--accent3); }
+  .dot-orange { background: var(--accent2); }
+  .activity-text { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .activity-text strong { color: var(--text); font-weight: 500; }
+  .activity-time { font-size: 11px; color: var(--hint); margin-top: 1px; }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 3rem 1rem;
+    border: 1px dashed var(--border); border-radius: 12px;
+    display: none;
+  }
+  .empty-state.show { display: block; }
+  .empty-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+  .empty-title { font-family: var(--font-head); font-size: 15px; font-weight: 700; margin-bottom: 0.4rem; }
+  .empty-text { font-size: 13px; color: var(--muted); font-weight: 300; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 2px; background: var(--bg3); border-radius: 8px; padding: 3px; margin-bottom: 1rem; }
+  .tab {
+    flex: 1; padding: 6px 10px; border-radius: 6px; border: none; background: none;
+    font-family: var(--font-body); font-size: 12px; font-weight: 500; color: var(--muted);
+    cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .tab.active { background: var(--bg2); color: var(--text); }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  @media (max-width: 1024px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; }
+    .content { padding: 1.25rem; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <a href="index.html" class="sidebar-logo">
+    <span class="logo-dot"></span>PromptCraft
+  </a>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" onclick="setTab(this)">
+      <span class="icon">⚡</span> Dashboard
+    </button>
+    <button class="nav-item" onclick="setTab(this)">
+      <span class="icon">✨</span> Generate
+    </button>
+    <button class="nav-item" onclick="setTab(this)">
+      <span class="icon">📁</span> My Prompts
+    </button>
+
+    <div class="nav-section-label">Explore</div>
+
+    <button class="nav-item" onclick="setTab(this)">
+      <span class="icon">📚</span> Templates
+      <span class="nav-badge">500+</span>
+    </button>
+    <button class="nav-item" onclick="setTab(this)">
+      <span class="icon">🔬</span> LLM Compare
+    </button>
+
+    <div class="nav-section-label">Settings</div>
+
+    <button class="nav-item" onclick="setTab(this)">
+      <span class="icon">⚙️</span> Settings
+    </button>
+    <button class="nav-item" onclick="setTab(this)">
+      <span class="icon">🔑</span> API Keys
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <button class="user-card">
+      <div class="avatar">AK</div>
+      <div>
+        <div class="user-name">Arjun Kumar</div>
+        <div class="user-plan">Free plan</div>
+      </div>
+      <span class="user-chevron">›</span>
+    </button>
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-title">Dashboard</div>
+    <div class="topbar-actions">
+      <a href="#" class="btn-new">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New prompt
+      </a>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- Greeting -->
+    <div class="greeting">
+      <h1>Good morning, Arjun 👋</h1>
+      <p>You've generated 3 prompts today. Keep going.</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Prompts generated</div>
+        <div class="stat-value">47</div>
+        <div class="stat-change up">↑ 12 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Saved prompts</div>
+        <div class="stat-value">8</div>
+        <div class="stat-change neutral">2 of 10 limit</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Templates used</div>
+        <div class="stat-value">12</div>
+        <div class="stat-change up">↑ 4 this week</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Models compared</div>
+        <div class="stat-value">3</div>
+        <div class="stat-change neutral">Claude · GPT · Gemini</div>
+      </div>
+    </div>
+
+    <!-- Main grid -->
+    <div class="main-grid">
+
+      <!-- Left: recent prompts -->
+      <div>
+        <div class="section-header">
+          <div class="section-title">Recent prompts</div>
+          <a href="#" class="section-link">View all →</a>
+        </div>
+
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab(this,'all')">All</button>
+          <button class="tab" onclick="switchTab(this,'saved')">Saved</button>
+          <button class="tab" onclick="switchTab(this,'generated')">Generated</button>
+        </div>
+
+        <div class="prompt-list" id="promptList">
+          <div class="prompt-card">
+            <div class="prompt-card-top">
+              <div class="prompt-title">Cold email outreach for SaaS product</div>
+              <span class="prompt-tag tag-orange">Marketing</span>
+            </div>
+            <div class="prompt-preview">You are an expert B2B copywriter specializing in SaaS. Write a cold outreach email targeting startup founders...</div>
+            <div class="prompt-card-footer">
+              <div class="prompt-meta">
+                <span class="prompt-model">Claude Sonnet</span>
+                <span class="prompt-date">2 hours ago</span>
+              </div>
+              <div class="prompt-actions">
+                <button class="action-btn" title="Copy">⎘</button>
+                <button class="action-btn" title="Save">♡</button>
+                <button class="action-btn" title="More">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="prompt-card">
+            <div class="prompt-card-top">
+              <div class="prompt-title">Debug React component with hooks</div>
+              <span class="prompt-tag tag-blue">Coding</span>
+            </div>
+            <div class="prompt-preview">You are a senior React developer. Analyze the following component for bugs, performance issues, and best practice violations...</div>
+            <div class="prompt-card-footer">
+              <div class="prompt-meta">
+                <span class="prompt-model">ChatGPT-4o</span>
+                <span class="prompt-date">Yesterday</span>
+              </div>
+              <div class="prompt-actions">
+                <button class="action-btn" title="Copy">⎘</button>
+                <button class="action-btn" title="Save">♡</button>
+                <button class="action-btn" title="More">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="prompt-card">
+            <div class="prompt-card-top">
+              <div class="prompt-title">Weekly newsletter for tech audience</div>
+              <span class="prompt-tag tag-lime">Writing</span>
+            </div>
+            <div class="prompt-preview">Act as a newsletter editor for a technical audience. Write a 300-word weekly roundup covering the 3 most important AI developments...</div>
+            <div class="prompt-card-footer">
+              <div class="prompt-meta">
+                <span class="prompt-model">Gemini Pro</span>
+                <span class="prompt-date">2 days ago</span>
+              </div>
+              <div class="prompt-actions">
+                <button class="action-btn" title="Copy">⎘</button>
+                <button class="action-btn" title="Save">♡</button>
+                <button class="action-btn" title="More">⋯</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="prompt-card">
+            <div class="prompt-card-top">
+              <div class="prompt-title">Competitive analysis framework</div>
+              <span class="prompt-tag tag-purple">Research</span>
+            </div>
+            <div class="prompt-preview">You are a strategy consultant. Create a structured competitive analysis for [company] operating in [market]. Cover positioning, pricing, strengths...</div>
+            <div class="prompt-card-footer">
+              <div class="prompt-meta">
+                <span class="prompt-model">Claude Opus</span>
+                <span class="prompt-date">3 days ago</span>
+              </div>
+              <div class="prompt-actions">
+                <button class="action-btn" title="Copy">⎘</button>
+                <button class="action-btn" title="Save">♡</button>
+                <button class="action-btn" title="More">⋯</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div class="right-col">
+
+        <!-- Quick generate -->
+        <div class="quick-card">
+          <div class="quick-title">Quick generate</div>
+          <div class="quick-sub">Describe your goal and get a perfect prompt instantly.</div>
+          <textarea class="quick-input" placeholder="e.g. Help me write better product descriptions for my Shopify store..."></textarea>
+          <button class="quick-btn">
+            ⚡ Generate prompt
+          </button>
+        </div>
+
+        <!-- Usage -->
+        <div class="usage-card">
+          <div class="usage-header">
+            <div class="usage-title">Usage</div>
+            <span class="plan-badge">Free plan</span>
+          </div>
+
+          <div class="usage-item">
+            <div class="usage-label">
+              <span>Generations today</span>
+              <span>3 / 5</span>
+            </div>
+            <div class="usage-bar">
+              <div class="usage-fill fill-accent" style="width: 60%"></div>
+            </div>
+          </div>
+
+          <div class="usage-item">
+            <div class="usage-label">
+              <span>Saved prompts</span>
+              <span>8 / 10</span>
+            </div>
+            <div class="usage-bar">
+              <div class="usage-fill fill-blue" style="width: 80%"></div>
+            </div>
+          </div>
+
+          <div class="usage-item">
+            <div class="usage-label">
+              <span>LLM comparisons</span>
+              <span>Upgrade required</span>
+            </div>
+            <div class="usage-bar">
+              <div class="usage-fill fill-orange" style="width: 0%"></div>
+            </div>
+          </div>
+
+          <button class="upgrade-btn">Upgrade to Pro — ₹499/mo →</button>
+        </div>
+
+        <!-- Activity -->
+        <div class="activity-card">
+          <div class="activity-title">Recent activity</div>
+
+          <div class="activity-item">
+            <span class="activity-dot dot-lime"></span>
+            <div>
+              <div class="activity-text">Generated <strong>Cold email prompt</strong></div>
+              <div class="activity-time">2 hours ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-dot dot-blue"></span>
+            <div>
+              <div class="activity-text">Saved <strong>React debug template</strong></div>
+              <div class="activity-time">Yesterday, 4:22 PM</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-dot dot-orange"></span>
+            <div>
+              <div class="activity-text">Compared <strong>Newsletter prompt</strong> on 3 models</div>
+              <div class="activity-time">2 days ago</div>
+            </div>
+          </div>
+          <div class="activity-item">
+            <span class="activity-dot dot-lime"></span>
+            <div>
+              <div class="activity-text">Used template <strong>Competitive analysis</strong></div>
+              <div class="activity-time">3 days ago</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function setTab(el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelector('.topbar-title').textContent = el.textContent.trim().replace(/[^\w\s]/g,'').trim();
+  }
+
+  function switchTab(el, type) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+  }
+
+  /* Animate usage bars on load */
+  window.addEventListener('load', () => {
+    document.querySelectorAll('.usage-fill').forEach(bar => {
+      const w = bar.style.width; bar.style.width = '0';
+      setTimeout(() => { bar.style.width = w; }, 200);
+    });
+  });
+</script>
+</body>
+</html>

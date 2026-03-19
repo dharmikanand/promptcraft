@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in — PromptCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #080809; --bg2: #0f0f11; --bg3: #161618;
+    --border: rgba(255,255,255,0.08); --border-hover: rgba(255,255,255,0.16);
+    --text: #f0efe8; --muted: rgba(240,239,232,0.5); --hint: rgba(240,239,232,0.3);
+    --accent: #d4ff47; --danger: #ff4f4f;
+    --font-head: 'Syne', sans-serif; --font-body: 'DM Sans', sans-serif;
+  }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); min-height: 100vh; display: flex; flex-direction: column; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.5;
+  }
+  nav { padding: 0 2rem; height: 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .nav-logo { font-family: var(--font-head); font-size: 17px; font-weight: 800; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 8px; }
+  .logo-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 10px var(--accent); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+  .nav-link { font-size: 13px; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .nav-link:hover { color: var(--text); }
+  .nav-link span { color: var(--accent); }
+
+  .page { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; position: relative; overflow: hidden; }
+
+  .bg-glow {
+    position: absolute; width: 700px; height: 700px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,255,71,0.05) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-50%); pointer-events: none;
+  }
+
+  .bg-grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+    background-size: 55px 55px;
+    mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, black, transparent);
+  }
+
+  .form-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 2.5rem;
+    width: 100%; max-width: 420px;
+    position: relative; z-index: 2;
+    animation: fadeIn .4s ease both;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card-brand {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 2rem;
+    font-family: var(--font-head); font-size: 15px; font-weight: 800; color: var(--text);
+  }
+  .card-brand .logo-dot { width: 6px; height: 6px; }
+
+  .form-heading { font-family: var(--font-head); font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 0.3rem; }
+  .form-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.75rem; font-weight: 300; }
+
+  .btn-google {
+    width: 100%; padding: 12px 16px; background: var(--bg3);
+    border: 1px solid var(--border-hover); border-radius: 10px; color: var(--text);
+    font-family: var(--font-body); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .2s, border-color .2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px; text-decoration: none;
+  }
+  .btn-google:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.2); }
+
+  .google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 1.5rem 0; color: var(--hint); font-size: 12px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  .field { margin-bottom: 1rem; }
+  label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; letter-spacing: 0.03em; }
+
+  input[type="email"], input[type="password"] {
+    width: 100%; padding: 11px 14px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; color: var(--text);
+    font-family: var(--font-body); font-size: 14px; font-weight: 300;
+    transition: border-color .2s, box-shadow .2s; outline: none; appearance: none;
+  }
+  input::placeholder { color: var(--hint); }
+  input:focus { border-color: rgba(212,255,71,0.4); box-shadow: 0 0 0 3px rgba(212,255,71,0.08); }
+  input.error { border-color: rgba(255,79,79,0.5); }
+
+  .field-footer { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .field-footer label { margin: 0; }
+  .forgot-link { font-size: 12px; color: var(--muted); text-decoration: none; transition: color .2s; }
+  .forgot-link:hover { color: var(--accent); }
+
+  .field-error { font-size: 11px; color: var(--danger); margin-top: 5px; display: none; }
+  .field-error.show { display: block; }
+
+  .alert-error {
+    background: rgba(255,79,79,0.08); border: 1px solid rgba(255,79,79,0.2);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: 13px; color: #ff8080;
+    margin-bottom: 1rem; display: none;
+  }
+  .alert-error.show { display: block; }
+
+  .remember-row { display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; }
+  .remember-row input[type="checkbox"] { width: 15px; height: 15px; accent-color: var(--accent); cursor: pointer; }
+  .remember-row label { font-size: 13px; color: var(--muted); cursor: pointer; margin: 0; }
+
+  .btn-submit {
+    width: 100%; padding: 13px; background: var(--accent);
+    border: none; border-radius: 10px; color: #080809;
+    font-family: var(--font-body); font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: opacity .2s, transform .1s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    position: relative; overflow: hidden;
+  }
+  .btn-submit::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg,rgba(255,255,255,0.15) 0%,transparent 60%); pointer-events: none; }
+  .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .signup-link { text-align: center; margin-top: 1.25rem; font-size: 13px; color: var(--muted); }
+  .signup-link a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .signup-link a:hover { text-decoration: underline; }
+
+  /* Forgot password modal */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center; padding: 1rem;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--bg2); border: 1px solid var(--border-hover);
+    border-radius: 16px; padding: 2rem; max-width: 380px; width: 100%;
+    animation: fadeIn .25s ease;
+  }
+  .modal h3 { font-family: var(--font-head); font-size: 1.1rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .modal p { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; font-weight: 300; line-height: 1.5; }
+  .modal-actions { display: flex; gap: 8px; margin-top: 1rem; }
+  .btn-outline {
+    flex: 1; padding: 10px; background: transparent;
+    border: 1px solid var(--border); border-radius: 8px;
+    color: var(--muted); font-family: var(--font-body); font-size: 13px;
+    cursor: pointer; transition: border-color .2s, color .2s;
+  }
+  .btn-outline:hover { border-color: var(--border-hover); color: var(--text); }
+  .btn-modal-send {
+    flex: 2; padding: 10px; background: var(--accent);
+    border: none; border-radius: 8px; color: #080809;
+    font-family: var(--font-body); font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .btn-modal-send:hover { opacity: 0.88; }
+
+  @media (max-width: 480px) {
+    .form-card { padding: 1.75rem 1.5rem; border-radius: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo"><span class="logo-dot"></span>PromptCraft</a>
+  <a href="signup.html" class="nav-link">No account? <span>Sign up free</span></a>
+</nav>
+
+<div class="page">
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <div class="form-card">
+    <div class="card-brand"><span class="logo-dot"></span>PromptCraft</div>
+
+    <h2 class="form-heading">Welcome back</h2>
+    <p class="form-sub">Sign in to your account to continue.</p>
+
+    <a href="#" class="btn-google" onclick="handleGoogle(event)">
+      <svg class="google-icon" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continue with Google
+    </a>
+
+    <div class="divider">or continue with email</div>
+
+    <div class="alert-error" id="alertError"></div>
+
+    <form id="loginForm" novalidate>
+      <div class="field">
+        <label for="email">Email address</label>
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+        <div class="field-error" id="emailErr">Enter a valid email</div>
+      </div>
+
+      <div class="field">
+        <div class="field-footer">
+          <label for="password">Password</label>
+          <a href="#" class="forgot-link" onclick="showForgot(event)">Forgot password?</a>
+        </div>
+        <input type="password" id="password" placeholder="Your password" autocomplete="current-password">
+        <div class="field-error" id="passwordErr">Password is required</div>
+      </div>
+
+      <div class="remember-row">
+        <input type="checkbox" id="remember" checked>
+        <label for="remember">Keep me signed in</label>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">
+        Sign in
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+
+    <div class="signup-link">Don't have an account? <a href="signup.html">Sign up free</a></div>
+  </div>
+</div>
+
+<!-- Forgot password modal -->
+<div class="modal-overlay" id="forgotModal">
+  <div class="modal">
+    <h3>Reset your password</h3>
+    <p>Enter your email address and we'll send you a link to reset your password.</p>
+    <div class="field">
+      <label for="resetEmail">Email address</label>
+      <input type="email" id="resetEmail" placeholder="you@example.com">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-outline" onclick="closeForgot()">Cancel</button>
+      <button class="btn-modal-send" onclick="sendReset()">Send reset link</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    let valid = true;
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const alert = document.getElementById('alertError');
+
+    ['emailErr','passwordErr'].forEach(id => document.getElementById(id).classList.remove('show'));
+    ['email','password'].forEach(id => document.getElementById(id).classList.remove('error'));
+    alert.classList.remove('show');
+
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      document.getElementById('emailErr').classList.add('show');
+      document.getElementById('email').classList.add('error'); valid = false;
+    }
+    if (!password) {
+      document.getElementById('passwordErr').classList.add('show');
+      document.getElementById('password').classList.add('error'); valid = false;
+    }
+    if (!valid) return;
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+
+    /* ── SUPABASE INTEGRATION POINT ──
+       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+       if (error) { show alertError; btn.disabled = false; }
+       else { window.location.href = 'dashboard.html'; }
+    */
+    setTimeout(() => {
+      window.location.href = 'dashboard.html';
+    }, 1000);
+  });
+
+  function handleGoogle(e) {
+    e.preventDefault();
+    /* await supabase.auth.signInWithOAuth({ provider: 'google' }); */
+    alert('Connect Supabase to enable Google login.');
+  }
+
+  function showForgot(e) { e.preventDefault(); document.getElementById('forgotModal').classList.add('show'); }
+  function closeForgot() { document.getElementById('forgotModal').classList.remove('show'); }
+
+  function sendReset() {
+    const email = document.getElementById('resetEmail').value.trim();
+    if (!email) return;
+    /* await supabase.auth.resetPasswordForEmail(email); */
+    closeForgot();
+    const alert = document.getElementById('alertError');
+    alert.style.background = 'rgba(212,255,71,0.08)';
+    alert.style.borderColor = 'rgba(212,255,71,0.2)';
+    alert.style.color = '#d4ff47';
+    alert.textContent = 'Password reset link sent! Check your email.';
+    alert.classList.add('show');
+  }
+</script>
+</body>
+</html>
