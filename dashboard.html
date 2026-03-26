@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — PromptCraft</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#080809;--bg2:#0f0f11;--bg3:#161618;--border:rgba(255,255,255,0.08);--border-h:rgba(255,255,255,0.14);--text:#f0efe8;--muted:rgba(240,239,232,0.5);--hint:rgba(240,239,232,0.28);--accent:#d4ff47;--accent2:#ff6b35;--accent3:#47c3ff;--sw:240px;--font-head:'Syne',sans-serif;--font-body:'DM Sans',sans-serif;--font-mono:'DM Mono',monospace;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;display:flex;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:9998;opacity:0.5;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:49;backdrop-filter:blur(2px);}.overlay.show{display:block;}
+.sidebar{width:var(--sw);flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:50;transition:transform .3s ease;}
+.sidebar-logo{padding:1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);text-decoration:none;}
+.logo-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.sidebar-nav{flex:1;padding:1rem 0.75rem;display:flex;flex-direction:column;gap:2px;overflow-y:auto;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;font-size:13px;color:var(--muted);text-decoration:none;border:none;background:none;width:100%;transition:background .15s,color .15s;cursor:pointer;text-align:left;}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text);}.nav-item.active{background:rgba(212,255,71,0.08);color:var(--accent);font-weight:500;}
+.nav-item .icon{width:18px;text-align:center;font-size:14px;flex-shrink:0;}
+.nav-badge{margin-left:auto;font-size:10px;background:rgba(212,255,71,0.15);color:var(--accent);padding:1px 6px;border-radius:20px;font-weight:600;}
+.nav-sec{font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--hint);padding:14px 12px 4px;}
+.sidebar-footer{padding:0.75rem;border-top:1px solid var(--border);}
+.user-card{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;transition:background .15s;border:none;background:none;width:100%;text-align:left;}.user-card:hover{background:rgba(255,255,255,0.04);}
+.avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0;background:rgba(212,255,71,0.15);border:1px solid rgba(212,255,71,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);font-family:var(--font-head);}
+.uname{font-size:13px;font-weight:500;color:var(--text);line-height:1.2;}.uplan{font-size:11px;color:var(--muted);}
+.logout-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;color:var(--muted);background:none;border:none;cursor:pointer;width:100%;margin-top:4px;transition:all .15s;}.logout-btn:hover{background:rgba(255,79,79,0.08);color:#ff8080;}
+.main{margin-left:var(--sw);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{height:58px;padding:0 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);position:sticky;top:0;z-index:40;}
+.topbar-left{display:flex;align-items:center;gap:10px;}
+.hamburger{display:none;width:36px;height:36px;border:1px solid var(--border);border-radius:8px;background:none;color:var(--muted);font-size:18px;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}.hamburger:hover{border-color:var(--border-h);color:var(--text);}
+.topbar-title{font-family:var(--font-head);font-size:16px;font-weight:700;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#7acc3a;display:inline-block;margin-left:6px;animation:lp 2s ease-in-out infinite;}
+@keyframes lp{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-new{display:flex;align-items:center;gap:7px;background:var(--accent);color:#080809;font-family:var(--font-body);font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;transition:opacity .2s,transform .1s;text-decoration:none;}.btn-new:hover{opacity:.88;transform:translateY(-1px);}
+.content{padding:1.75rem 1.5rem;flex:1;}
+.greeting{margin-bottom:1.75rem;}.greeting h1{font-family:var(--font-head);font-size:1.5rem;font-weight:700;letter-spacing:-0.02em;margin-bottom:0.2rem;}.greeting p{font-size:14px;color:var(--muted);font-weight:300;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.75rem;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.1rem;transition:border-color .2s,transform .15s;}.stat-card:hover{border-color:var(--border-h);transform:translateY(-1px);}
+.stat-label{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem;}
+.stat-value{font-family:var(--font-head);font-size:1.9rem;font-weight:800;line-height:1;margin-bottom:0.25rem;letter-spacing:-0.02em;}
+.stat-sub{font-size:12px;color:var(--hint);}.stat-sub.up{color:#7acc3a;}
+.main-grid{display:grid;grid-template-columns:1fr 290px;gap:1.5rem;}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;}
+.sec-title{font-family:var(--font-head);font-size:14px;font-weight:700;}
+.sec-link{font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;}.sec-link:hover{color:var(--accent);}
+.tabs{display:flex;gap:2px;background:var(--bg3);border-radius:8px;padding:3px;margin-bottom:.85rem;}
+.tab{flex:1;padding:6px 8px;border-radius:6px;border:none;background:none;font-family:var(--font-body);font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;text-align:center;}.tab.active{background:var(--bg2);color:var(--text);}
+.prompt-list{display:flex;flex-direction:column;gap:8px;}
+.prompt-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:.9rem 1rem;transition:border-color .2s,background .2s;cursor:pointer;animation:cardIn .3s ease both;}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.prompt-card:hover{border-color:var(--border-h);background:var(--bg3);}
+.pcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:.4rem;}
+.ptitle{font-size:13px;font-weight:500;color:var(--text);line-height:1.3;}
+.ptag{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:4px;flex-shrink:0;margin-top:1px;}
+.tag-lime{background:rgba(212,255,71,0.1);color:#a8cc34;}.tag-blue{background:rgba(71,195,255,0.1);color:#5bb8e8;}.tag-orange{background:rgba(255,107,53,0.1);color:#e07a52;}.tag-purple{background:rgba(167,139,250,0.1);color:#a78bfa;}
+.ppreview{font-size:12px;color:var(--muted);line-height:1.5;font-weight:300;margin-bottom:.6rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pfoot{display:flex;align-items:center;justify-content:space-between;}
+.pmeta{display:flex;gap:10px;}.pmodel,.pdate{font-size:11px;color:var(--hint);}
+.pactions{display:flex;gap:5px;}
+.abtn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:12px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}.abtn:hover{border-color:var(--border-h);color:var(--text);}
+.view-hint{font-size:10px;color:var(--hint);margin-top:5px;font-style:italic;}
+.empty-box{text-align:center;padding:2.5rem 1rem;border:1px dashed var(--border);border-radius:12px;}
+.empty-box .eicon{font-size:1.8rem;margin-bottom:.75rem;}
+.empty-box h3{font-family:var(--font-head);font-size:14px;font-weight:700;margin-bottom:.4rem;}
+.empty-box p{font-size:12px;color:var(--muted);font-weight:300;margin-bottom:1rem;}
+.empty-box a{display:inline-flex;align-items:center;gap:6px;background:var(--accent);color:#080809;font-size:12px;font-weight:600;padding:8px 16px;border-radius:7px;text-decoration:none;}
+.right-col{display:flex;flex-direction:column;gap:1.25rem;}
+.qcard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.1rem;position:relative;overflow:hidden;}
+.qcard::before{content:'';position:absolute;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(212,255,71,0.07) 0%,transparent 70%);top:-50px;right:-50px;pointer-events:none;}
+.qtitle{font-family:var(--font-head);font-size:13px;font-weight:700;margin-bottom:3px;}.qsub{font-size:12px;color:var(--muted);margin-bottom:.85rem;font-weight:300;line-height:1.4;}
+.qinput{width:100%;padding:9px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:13px;font-weight:300;transition:border-color .2s;outline:none;resize:none;min-height:70px;}.qinput::placeholder{color:var(--hint);}.qinput:focus{border-color:rgba(212,255,71,0.35);}
+.qbtn{width:100%;margin-top:8px;padding:9px;background:var(--accent);border:none;border-radius:8px;color:#080809;font-family:var(--font-body);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s;}.qbtn:hover{opacity:.88;}
+.ucard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.1rem;}
+.uheader{display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem;}
+.utitle{font-family:var(--font-head);font-size:13px;font-weight:700;}
+.pbadge{font-size:11px;background:rgba(255,255,255,0.07);padding:3px 8px;border-radius:20px;color:var(--muted);font-weight:500;}
+.uitem{margin-bottom:.85rem;}.uitem:last-child{margin-bottom:0;}
+.ulabel{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:5px;}.ulabel span:last-child{color:var(--text);font-weight:500;}
+.ubar{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+.ufill{height:100%;border-radius:2px;transition:width .7s ease;}.fa{background:var(--accent);}.fb{background:var(--accent3);}
+.upbtn{width:100%;margin-top:1rem;padding:9px;background:transparent;border:1px solid var(--border-h);border-radius:8px;color:var(--muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;}.upbtn:hover{background:rgba(212,255,71,0.06);border-color:rgba(212,255,71,0.3);color:var(--accent);}
+.acard{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:1.1rem;}
+.atitle{font-family:var(--font-head);font-size:13px;font-weight:700;margin-bottom:.85rem;}
+.aitem{display:flex;align-items:flex-start;gap:10px;padding:7px 4px;border-bottom:1px solid var(--border);cursor:pointer;border-radius:6px;transition:background .15s;}.aitem:last-child{border-bottom:none;}.aitem:hover{background:rgba(255,255,255,0.03);}
+.adot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px;}.dl{background:var(--accent);}.db{background:var(--accent3);}.do{background:var(--accent2);}
+.atext{font-size:12px;color:var(--muted);line-height:1.4;}.atext strong{color:var(--text);font-weight:500;}
+.atime{font-size:11px;color:var(--hint);margin-top:1px;}
+.empty-act{text-align:center;padding:1.25rem .5rem;font-size:12px;color:var(--hint);}
+
+/* Modal */
+.modal-bg{display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:1rem;}.modal-bg.show{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border-h);border-radius:16px;width:100%;max-width:620px;max-height:88vh;display:flex;flex-direction:column;animation:mIn .2s ease both;}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.mhead{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mtitle{font-family:var(--font-head);font-size:14px;font-weight:700;}
+.mclose{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}.mclose:hover{border-color:var(--border-h);color:var(--text);}
+.mmeta{padding:.6rem 1.4rem;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:center;flex-shrink:0;}
+.mbody{padding:1.25rem 1.4rem;overflow-y:auto;flex:1;}
+.mprompt{font-family:var(--font-mono);font-size:13px;line-height:1.85;color:var(--text);white-space:pre-wrap;word-break:break-word;}
+.mfoot{padding:.9rem 1.4rem;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;}
+.mfbtn{flex:1;padding:9px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--muted);font-family:var(--font-body);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px;}.mfbtn:hover{border-color:var(--border-h);color:var(--text);}
+.mfbtn.acc{background:var(--accent);border-color:var(--accent);color:#080809;font-weight:600;}.mfbtn.acc:hover{opacity:.88;}
+
+@media(max-width:1100px){.stats-grid{grid-template-columns:repeat(2,1fr);}.main-grid{grid-template-columns:1fr;}.right-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}}
+@media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);}.main{margin-left:0;}.hamburger{display:flex;}.content{padding:1.25rem 1rem;}.stats-grid{grid-template-columns:repeat(2,1fr);gap:8px;}.main-grid{grid-template-columns:1fr;}.right-col{display:flex;flex-direction:column;}.topbar{padding:0 1rem;}.greeting h1{font-size:1.2rem;}}
+@media(max-width:420px){.stats-grid{grid-template-columns:1fr 1fr;}.stat-value{font-size:1.5rem;}}
+</style>
+</head>
+<body>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- Prompt Modal -->
+<div class="modal-bg" id="modalBg" onclick="bgClick(event)">
+  <div class="modal">
+    <div class="mhead">
+      <div class="mtitle" id="mTitle">Prompt</div>
+      <button class="mclose" onclick="closeModal()">✕</button>
+    </div>
+    <div class="mmeta">
+      <span class="ptag tag-lime" id="mTag">General</span>
+      <span style="font-size:11px;color:var(--hint)" id="mModel"></span>
+      <span style="font-size:11px;color:var(--hint)" id="mDate"></span>
+    </div>
+    <div class="mbody"><div class="mprompt" id="mPromptText"></div></div>
+    <div class="mfoot">
+      <button class="mfbtn" id="mCopyBtn" onclick="mCopy()">⎘ Copy</button>
+      <button class="mfbtn acc" onclick="mUse()">⚡ Use in generator →</button>
+    </div>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <a href="index.html" class="sidebar-logo"><span class="logo-dot"></span>PromptCraft</a>
+  <nav class="sidebar-nav">
+    <a href="dashboard.html" class="nav-item active"><span class="icon">⚡</span>Dashboard</a>
+    <a href="generator.html" class="nav-item"><span class="icon">✨</span>Generate</a>
+    <a href="#" class="nav-item" onclick="soon('My Prompts')"><span class="icon">📁</span>My Prompts</a>
+    <div class="nav-sec">Explore</div>
+    <a href="#" class="nav-item" onclick="soon('Templates')"><span class="icon">📚</span>Templates<span class="nav-badge">500+</span></a>
+    <a href="#" class="nav-item" onclick="soon('LLM Compare')"><span class="icon">🔬</span>LLM Compare</a>
+    <div class="nav-sec">Account</div>
+    <a href="#" class="nav-item" onclick="soon('Settings')"><span class="icon">⚙️</span>Settings</a>
+    <a href="#" class="nav-item" onclick="soon('API Keys')"><span class="icon">🔑</span>API Keys</a>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="user-card">
+      <div class="avatar" id="uAvatar">?</div>
+      <div><div class="uname" id="uName">Loading...</div><div class="uplan">Free plan</div></div>
+      <span style="margin-left:auto;color:var(--hint);font-size:12px;">›</span>
+    </button>
+    <button class="logout-btn" onclick="logout()"><span>⎋</span>Sign out</button>
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <div class="topbar-title">Dashboard <span class="live-dot" title="Live updates enabled"></span></div>
+    </div>
+    <a href="generator.html" class="btn-new">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      New prompt
+    </a>
+  </div>
+  <div class="content">
+    <div class="greeting">
+      <h1 id="gText">Welcome 👋</h1>
+      <p id="gSub">Ready to craft some great prompts today?</p>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Prompts generated</div><div class="stat-value" id="sGen">0</div><div class="stat-sub" id="sGenSub">Get started today</div></div>
+      <div class="stat-card"><div class="stat-label">Saved prompts</div><div class="stat-value" id="sSaved">0</div><div class="stat-sub" id="sSavedSub">0 of 10 limit</div></div>
+      <div class="stat-card"><div class="stat-label">Generations left</div><div class="stat-value" id="sCredits">5</div><div class="stat-sub">Today's free limit</div></div>
+      <div class="stat-card"><div class="stat-label">Last activity</div><div class="stat-value" style="font-size:1rem;padding-top:6px" id="sLast">—</div><div class="stat-sub">Most recent</div></div>
+    </div>
+    <div class="main-grid">
+      <div>
+        <div class="sec-header">
+          <div class="sec-title">Recent prompts</div>
+          <a href="generator.html" class="sec-link">Create new →</a>
+        </div>
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab(this,'all')">All</button>
+          <button class="tab" onclick="switchTab(this,'saved')">Saved</button>
+          <button class="tab" onclick="switchTab(this,'generated')">Generated</button>
+        </div>
+        <div id="promptArea"></div>
+      </div>
+      <div class="right-col">
+        <div class="qcard">
+          <div class="qtitle">Quick generate</div>
+          <div class="qsub">Describe your goal and get a perfect prompt instantly.</div>
+          <textarea class="qinput" id="qInput" placeholder="e.g. Help me write better product descriptions..."></textarea>
+          <button class="qbtn" onclick="goGen()">⚡ Generate prompt</button>
+        </div>
+        <div class="ucard">
+          <div class="uheader"><div class="utitle">Usage today</div><span class="pbadge">Free plan</span></div>
+          <div class="uitem"><div class="ulabel"><span>Generations</span><span id="uGenLbl">0 / 5</span></div><div class="ubar"><div class="ufill fa" id="uGenBar" style="width:0%"></div></div></div>
+          <div class="uitem"><div class="ulabel"><span>Saved prompts</span><span id="uSaveLbl">0 / 10</span></div><div class="ubar"><div class="ufill fb" id="uSaveBar" style="width:0%"></div></div></div>
+          <div class="uitem"><div class="ulabel"><span>LLM comparisons</span><span style="color:var(--hint)">Pro only</span></div><div class="ubar"><div class="ufill" style="width:0%;background:var(--accent2)"></div></div></div>
+          <button class="upbtn" onclick="alert('Pro plan coming soon!\n\nUnlimited generations, LLM comparison & team workspace for \u20b9499/mo.')">Upgrade to Pro — ₹499/mo →</button>
+        </div>
+        <div class="acard">
+          <div class="atitle">Recent activity</div>
+          <div id="actArea"><div class="empty-act">No activity yet — generate your first prompt!</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const gs=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d;}catch{return d;}};
+const ss=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function ago(ts){const d=(Date.now()-ts)/1000;if(d<5)return'Just now';if(d<60)return Math.floor(d)+'s ago';if(d<3600)return Math.floor(d/60)+'m ago';if(d<86400)return Math.floor(d/3600)+'h ago';return Math.floor(d/86400)+'d ago';}
+let currentTab='all', mText='';
+
+function init(){
+  const name=gs('pc_name',''), email=gs('pc_email','');
+  const display=name||(email?email.split('@')[0]:'User');
+  const initials=display.trim().split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2)||'U';
+  document.getElementById('uName').textContent=display;
+  document.getElementById('uAvatar').textContent=initials;
+  const h=new Date().getHours();
+  const tod=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('gText').textContent=tod+', '+display.split(' ')[0]+' 👋';
+  const gen=gs('pc_generated',0), saved=gs('pc_saved',0), used=gs('pc_credits_used',0), left=Math.max(0,5-used);
+  const act=gs('pc_activity',[]);
+  document.getElementById('sGen').textContent=gen;
+  document.getElementById('sSaved').textContent=saved;
+  document.getElementById('sCredits').textContent=left;
+  document.getElementById('sLast').textContent=act.length?ago(act[0].ts):'—';
+  document.getElementById('sGenSub').textContent=gen>0?gen+' total':'Get started today';
+  if(gen>0)document.getElementById('sGenSub').classList.add('up');
+  document.getElementById('sSavedSub').textContent=saved+' of 10 limit';
+  document.getElementById('gSub').textContent=gen===0?'Welcome! Generate your first prompt to get started.':'You\'ve generated '+gen+' prompt'+(gen!==1?'s':'')+' so far. Keep going!';
+  document.getElementById('uGenLbl').textContent=used+' / 5';
+  document.getElementById('uSaveLbl').textContent=saved+' / 10';
+  document.getElementById('uGenBar').style.width=Math.min(100,(used/5)*100)+'%';
+  document.getElementById('uSaveBar').style.width=Math.min(100,(saved/10)*100)+'%';
+  renderPrompts(); renderActivity();
+}
+
+function renderPrompts(){
+  const all=gs('pc_prompts',[]);
+  const list=currentTab==='saved'?all.filter(p=>p.saved):all;
+  const el=document.getElementById('promptArea');
+  if(!list.length){
+    el.innerHTML='<div class="empty-box"><div class="eicon">✨</div><h3>No prompts yet</h3><p>Generate your first prompt and it will appear here.</p><a href="generator.html">⚡ Generate my first prompt</a></div>';
+    return;
+  }
+  el.innerHTML='<div class="prompt-list">'+list.slice(0,6).map((p,i)=>`
+    <div class="prompt-card" style="animation-delay:${i*0.04}s" onclick="openModal(${p.ts})">
+      <div class="pcard-top"><div class="ptitle">${esc(p.title)}</div><span class="ptag ${p.tagClass||'tag-lime'}">${esc(p.tag||'General')}</span></div>
+      <div class="ppreview">${esc(p.preview||'')}</div>
+      <div class="pfoot">
+        <div class="pmeta"><span class="pmodel">${esc(p.model||'Claude')}</span><span class="pdate">${ago(p.ts)}</span></div>
+        <div class="pactions">
+          <button class="abtn" title="Copy" onclick="event.stopPropagation();qCopy(${p.ts},this)">⎘</button>
+          <button class="abtn" title="Delete" onclick="event.stopPropagation();delP(${p.ts})">✕</button>
+        </div>
+      </div>
+      <div class="view-hint">Click to view full prompt</div>
+    </div>`).join('')+'</div>';
+}
+
+function renderActivity(){
+  const act=gs('pc_activity',[]);
+  const el=document.getElementById('actArea');
+  if(!act.length){el.innerHTML='<div class="empty-act">No activity yet — generate your first prompt!</div>';return;}
+  const cls=['dl','db','do'];
+  el.innerHTML=act.slice(0,6).map((a,i)=>`
+    <div class="aitem" onclick="openModalByTime(${a.promptTs||0})" title="Click to view prompt">
+      <span class="adot ${cls[i%3]}"></span>
+      <div><div class="atext">${esc(a.text)}</div><div class="atime">${ago(a.ts)}</div></div>
+    </div>`).join('');
+}
+
+function openModal(ts){
+  const p=gs('pc_prompts',[]).find(x=>x.ts===ts);
+  if(!p)return;
+  mText=p.fullPrompt||p.preview||'(Prompt not stored — please regenerate)';
+  document.getElementById('mTitle').textContent=p.title||'Prompt';
+  document.getElementById('mTag').textContent=p.tag||'General';
+  document.getElementById('mTag').className='ptag '+(p.tagClass||'tag-lime');
+  document.getElementById('mModel').textContent=p.model||'Claude';
+  document.getElementById('mDate').textContent=ago(p.ts);
+  document.getElementById('mPromptText').textContent=mText;
+  document.getElementById('modalBg').classList.add('show');
+  document.body.style.overflow='hidden';
+}
+
+function openModalByTime(pts){
+  if(!pts)return;
+  const p=gs('pc_prompts',[]).find(x=>Math.abs(x.ts-pts)<10000);
+  if(p)openModal(p.ts);
+}
+
+function bgClick(e){if(e.target===document.getElementById('modalBg'))closeModal();}
+function closeModal(){document.getElementById('modalBg').classList.remove('show');document.body.style.overflow='';}
+function mCopy(){navigator.clipboard.writeText(mText).then(()=>{const b=document.getElementById('mCopyBtn');b.textContent='✓ Copied!';setTimeout(()=>{b.textContent='⎘ Copy';},2000);});}
+function mUse(){ss('pc_quick_goal',mText);window.location.href='generator.html';}
+function qCopy(ts,btn){const p=gs('pc_prompts',[]).find(x=>x.ts===ts);if(!p)return;navigator.clipboard.writeText(p.fullPrompt||p.preview||'').then(()=>{btn.textContent='✓';btn.style.color='var(--accent)';setTimeout(()=>{btn.textContent='⎘';btn.style.color='';},1500);});}
+function delP(ts){const p=gs('pc_prompts',[]).filter(x=>x.ts!==ts);ss('pc_prompts',p);ss('pc_saved',p.length);init();}
+function switchTab(el,t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');currentTab=t;renderPrompts();}
+function goGen(){const t=document.getElementById('qInput').value.trim();if(t)ss('pc_quick_goal',t);window.location.href='generator.html';}
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');document.body.style.overflow='hidden';}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');document.body.style.overflow='';}
+function logout(){if(confirm('Sign out of PromptCraft?')){['pc_name','pc_email'].forEach(k=>localStorage.removeItem(k));window.location.href='login.html';}}
+function soon(n){alert(n+' is coming soon! 🚀\nWe\'re building this feature next.');}
+
+// REAL-TIME: update when tab becomes visible again
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)init();});
+// REAL-TIME: update when localStorage changes (from generator tab)
+window.addEventListener('storage',e=>{if(e.key&&e.key.startsWith('pc_'))init();});
+// REAL-TIME: poll every 2s while tab active
+setInterval(()=>{if(!document.hidden)init();},2000);
+
+init();
+</script>
+</body>
+</html>
