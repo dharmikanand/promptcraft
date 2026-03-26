@@ -56,7 +56,8 @@ Rules:
 
 Return ONLY the prompt itself. No explanation, no preamble, no "Here is your prompt:". Just the raw prompt text, ready to use.`;
 
-  const userMessage = `Create an optimised prompt for this goal: "${goal.trim()}"`;
+  const userMessage = `Create an optimised, highly tailored, and hyper-creative prompt for this specific goal: "${goal.trim()}". 
+WARNING: Do not use a generic template or repeat previous formats. Explicitly adapt to the unique details of my request.`;
 
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
@@ -69,7 +70,9 @@ Return ONLY the prompt itself. No explanation, no preamble, no "Here is your pro
       },
       body: JSON.stringify({
         model: 'openrouter/free',
-        max_tokens: 1024,
+        max_tokens: 1500,
+        temperature: 0.85,
+        presence_penalty: 0.3,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userMessage }

@@ -52,7 +52,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 /* Left panel - input */
 .input-panel{padding:2rem;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:1.5rem;}
 
-.panel-header{}
 .panel-title{font-family:var(--font-head);font-size:1.1rem;font-weight:700;letter-spacing:-0.01em;margin-bottom:4px;}
 .panel-sub{font-size:13px;color:var(--muted);font-weight:300;line-height:1.5;}
 
@@ -75,7 +74,6 @@ select:focus{border-color:rgba(212,255,71,0.3);}
 select option{background:var(--bg3);}
 
 /* Techniques */
-.techniques-box{}
 .tech-label{font-size:11px;font-weight:600;letter-spacing:0.07em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
 .tech-pills{display:flex;flex-wrap:wrap;gap:6px;}
 .tech-pill{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .15s;user-select:none;}
@@ -605,7 +603,7 @@ async function generatePrompt() {
     console.warn("API failed, using local fallback generation...", err);
     clearInterval(stepInterval);
     document.getElementById('loadingState').classList.remove('show');
-    showResult(goal); // Fallback to templates unconditionally if API fails
+    showResult(goal, true); // Fallback to templates unconditionally if API fails
   }
 }
 
@@ -676,12 +674,17 @@ function detectTag(g){const t=g.toLowerCase();if(t.includes('email')||t.includes
 function detectTagClass(g){const t=g.toLowerCase();if(t.includes('email')||t.includes('marketing'))return'tag-orange';if(t.includes('code')||t.includes('debug'))return'tag-blue';if(t.includes('write')||t.includes('blog'))return'tag-lime';return'tag-purple';}
 
 // Keep old showResult as fallback
-function showResult(goal) {
+function showResult(goal, isFallback = false) {
   const tpl = getTemplate(goal);
   const model = document.getElementById('modelSelect').value;
   const modelNames = {claude:'Claude prompt',chatgpt:'ChatGPT prompt',gemini:'Gemini prompt',llama:'Llama prompt',any:'Universal prompt'};
   currentPrompt = document.getElementById('promptResult').innerHTML = tpl.prompt;
-  document.getElementById('modelLabel').textContent = modelNames[model] || 'Optimised prompt';
+  let labelText = modelNames[model] || 'Optimised prompt';
+  if (isFallback) {
+    labelText += ' — ⚠️ OFFLINE TEMPLATE (Failed to connect to AI)';
+    document.getElementById('modelLabel').style.color = '#ff6b35';
+  }
+  document.getElementById('modelLabel').textContent = labelText;
   document.getElementById('scoreNum').textContent = tpl.score + '/100';
   setTimeout(() => { document.getElementById('scoreFill').style.width = tpl.score + '%'; }, 200);
   const tl = document.getElementById('techniquesList');
